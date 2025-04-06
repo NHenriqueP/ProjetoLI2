@@ -3,3 +3,7 @@ jogo:
 
 clean: 
 	rm jogo
+
+testar: testes.c main.c
+	gcc -o testes testes.c main.c -DTEST_MODE -lcunit
+	./testes

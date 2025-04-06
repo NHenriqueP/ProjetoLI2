@@ -1,6 +1,11 @@
+#define MAIN_PROGRAM // define este como o programa principal e resolve o problema de ter duas main uma neste ficheiro e outra no testes.c
+
 #include <stdio.h>
 #include <ctype.h> // Para usar a função toupper
 #include <string.h> // Para usar a função strcmp
+#include "main.h"
+
+// Funções auxiliares (printMatriz, selecionaPosicao, alteraPosicao) permanecem iguais...
 
 void printMatriz(int L, int C, char carac[][C + 1]) {
     for (int i = 0; i < L; i++) {
@@ -31,6 +36,7 @@ void alteraPosicao(int C, char carac[][C + 1], int x, int y, char *acao) {
     }
 }
 
+#ifdef MAIN_PROGRAM // Compila o main apenas se MAIN_PROGRAM estiver definido
 int main() {
     int i, L, C, x, y;
     char acao[10];
@@ -56,3 +62,4 @@ int main() {
 
     return 0;
 }
+#endif
