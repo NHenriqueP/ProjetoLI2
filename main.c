@@ -19,7 +19,7 @@ int selecionaPosicao(int L, int C, int *x, int *y) {
     return 1; // Retorna 1 para indicar sucesso
 }
 
-void alteraPosicao(int C, char carac[][C + 1], int x, int y, const char *acao) {
+void alteraPosicao(int C, char carac[][C + 1], int x, int y, char *acao) {
     if (acao == NULL) return;
 
     if (strcmp(acao, "riscado") == 0) {
