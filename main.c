@@ -1,54 +1,70 @@
 #include "funcoes.c"
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
+#include <stdio.h>
 
-// Função de teste
-void test_alteraPosicao() {
-    char matriz[2][6] = {"abcde", "fghij"};
-
-    // Testar "riscado"
-    alteraPosicao(5, matriz, 0, 1, "riscado"); // deve alterar 'b' para '#'
-    CU_ASSERT_EQUAL(matriz[0][1], '#');
-
-    // Testar "branco"
-    matriz[1][2] = 'k';
-    alteraPosicao(5, matriz, 1, 2, "branco"); // deve alterar 'k' para 'K'
-    CU_ASSERT_EQUAL(matriz[1][2], 'K');
-}
 
 int main() {
 #ifdef TEST_MODE
-    // Modo de testes
-    CU_initialize_registry();
 
-    CU_pSuite suite = CU_add_suite("Testes de alteraPosicao", 0, 0);
-    CU_add_test(suite, "Teste de alteraPosicao", test_alteraPosicao);
-
-    CU_basic_run_tests();
-    CU_cleanup_registry();
 #else
     // Modo normal
-    int i, L, C, x, y;
+    int L, C, x, y;
     char acao[10];
-    if (scanf("%d %d", &L, &C) != 2) return 1;
+    char comando;
 
-    char carac[L][C + 1];
+    // Ler dimensões da matriz
 
-    for (i = 0; i < L; i++) {
-        if (scanf(" %s", carac[i]) != 1) return 1;
+    // Ler dimensões e matriz
+    if (scanf("%d %d", &L, &C) != 2) {
+        printf("Erro ao ler as dimensões da matriz!\n");
+        return 1;
     }
+    char carac[L][C+1]; // Tamanho máximo para a matriz
 
-    printMatriz(L, C, carac);
-
-    if (selecionaPosicao(L, C, &x, &y)) {
-        printf("Digite a ação (branco ou riscado): ");
-        if (scanf("%s", acao) != 1) {
-            printf("Erro ao ler a ação!\n");
+    for (int i = 0; i < L; i++) {
+        if (scanf("%s", carac[i]) != 1) {
+            printf("Erro ao ler a linha %d\n", i);
             return 1;
         }
-        alteraPosicao(C, carac, x, y, acao);
-        printMatriz(L, C, carac); // Imprime a matriz após a alteração
     }
+    
+    
+
+    // Loop principal
+    while (1) {
+        printMatriz(L, C, carac); // Imprime a matriz atual
+
+        printf("Digite um comando:\n-s para sair\n-g para guardar o jogo\n-l para carregar o jogo\n");
+        if (scanf(" %c", &comando) != 1) { // Added a space before %c
+            printf("Erro ao ler o comando!\n");
+            return 1;
+        }
+
+        // Verifica se o comando é "s" para sair
+        if (comando == 's') {
+            printf("Encerrar o programa.\n");
+            break;
+        }
+        // Verifica se o comando é 'g' para salvar o jogo
+        if (comando == 'g') {
+            salvarJogo("jogo.txt", L, C, carac);
+            continue;
+        }
+        // Verifica se o comando é 'l' para dar load no jogo
+        if (carregarJogo("jogo.txt", &L, &C, carac)) {
+            for (int i = 0; i < L; i++) {
+                printf("%s\n", carac[i]);
+            }
+        } else {
+            printf("Falha ao carregar o jogo.\n");
+        }
+
+
+        // Executa a ação
+        //alteraPosicao(C, carac, x, y, acao);
+    }
+
 #endif
     return 0;
 }

@@ -7,3 +7,8 @@ clean:
 testar:
 	gcc main.c -o testes -DTEST_MODE -lcunit -Wall -Wextra -pedantic -g
 	./testes
+
+tudo:
+	make clean
+	make jogo
+	./jogo
