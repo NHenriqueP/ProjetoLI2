@@ -2,6 +2,7 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 #include <stdio.h>
+#include <string.h>
 
 
 int main() {
@@ -25,6 +26,10 @@ int main() {
                 return 1;
             }
         }
+
+        // Limpar o buffer de entrada após o uso de scanf
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
     
         // Loop principal
         while (1) {
@@ -68,11 +73,9 @@ int main() {
 
             // Verifica se o comando é "b <coordenada>"
             if (comando[0] == 'b' && comando[1] == ' ') {
-            executarComandoB(L, C, carac, comando);
-            continue;
+                executarComandoB(L, C, carac, comando);
+                continue;
             }
-    
-            printf("Comando inválido!\n");
         }
     
     #endif
