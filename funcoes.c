@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <ctype.h> // Para usar a função toupper
 #include <string.h> // Para usar a função strcmp
+#include <stdlib.h>
 
 
 // Funções auxiliares (printMatriz, selecionaPosicao, alteraPosicao) permanecem iguais...
@@ -32,8 +33,6 @@ void salvarJogo( char *nomeArquivo, int L, int C, char carac[][C + 1]) {
         fclose(arquivo);
         printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
     }
-#include <stdio.h>
-#include <stdlib.h>
 
 int carregarJogo(const char *nomeArquivo, int *L, int *C, char ***carac) {
     FILE *arquivo = fopen(nomeArquivo, "r");
@@ -82,4 +81,92 @@ int carregarJogo(const char *nomeArquivo, int *L, int *C, char ***carac) {
     return 1; // Retorna 1 para indicar sucesso
 }
 
+// Função para determinar as coordenadas da matriz a partir de uma entrada no formato "<letra><número>"
+int determinarCoordenadas(char *coordenada, int *x, int *y) {
+    if (strlen(coordenada) < 2) {
+        printf("Coordenada inválida!\n");
+        return 0; // Retorna 0 para indicar falha
+    }
 
+    // A primeira parte da coordenada é a letra (linha)
+    char linha = toupper(coordenada[0]); // Converte para maiúscula
+    if (linha < 'A') {
+        printf("Coordenada inválida!\n");
+        return 0;
+    }
+
+    // A segunda parte da coordenada é o número (coluna)
+    int coluna = atoi(&coordenada[1]); // Converte a parte numérica para inteiro
+    if (coluna <= 0) {
+        printf("Coordenada inválida!\n");
+        return 0;
+    }
+
+    // Converte a letra para o índice da linha (0-indexado)
+    *x = linha - 'A';
+
+    // Converte o número para o índice da coluna (0-indexado)
+    *y = coluna - 1;
+
+    return 1; // Retorna 1 para indicar sucesso
+}
+
+// Funcao para executar o comando "r" (riscar)
+void executarComandoR(int L, int C, char carac[][C + 1], const char *comando) {
+    char coordenada[10];
+    if (sscanf(comando, "r %s", coordenada) != 1) {
+        printf("Comando inválido!\n");
+        return;
+    }
+
+    int x, y;
+    if (!determinarCoordenadas(coordenada, &x, &y)) {
+        printf("Erro ao determinar as coordenadas!\n");
+        return;
+    }
+
+    // Verifica se as coordenadas estão dentro dos limites da matriz
+    if (x < 0 || x >= L || y < 0 || y >= C) {
+        printf("Coordenadas fora dos limites da matriz!\n");
+        return;
+    }
+
+    // Altera a posição na matriz para '#'
+    carac[x][y] = '#';
+
+    // Converte o índice da linha (x) de volta para uma letra
+    char linha = 'a' + x;
+
+    // Imprime a mensagem no formato solicitado
+    printf("Posição (%c, %d) alterada para '#'.\n", linha, y + 1);
+}
+
+// Funcao para executar o comando "b" (colocar em maiúsculas)
+void executarComandoB(int L, int C, char carac[][C + 1], char *comando) {
+    char coordenada[10];
+    if (sscanf(comando, "b %s", coordenada) != 1) {
+        printf("Comando inválido!\n");
+        return;
+    }
+
+    int x, y;
+    if (!determinarCoordenadas(coordenada, &x, &y)) {
+        printf("Erro ao determinar as coordenadas!\n");
+        return;
+    }
+
+    // Verifica se as coordenadas estão dentro dos limites da matriz
+    if (x < 0 || x >= L || y < 0 || y >= C) {
+        printf("Coordenadas fora dos limites da matriz!\n");
+        return;
+    }
+
+    // Converte a letra na posição especificada para maiúscula
+    carac[x][y] = toupper(carac[x][y]);
+
+    // Converte o índice da linha (x) de volta para uma letra minúscula
+    char linha = 'a' + x;
+
+    // Imprime a mensagem no formato solicitado
+    printf("Posição (%c, %d) alterada para '%c'.\n", linha, y + 1, carac[x][y]);
+}
