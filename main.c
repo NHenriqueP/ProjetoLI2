@@ -1,43 +1,33 @@
-#define MAIN_PROGRAM // define este como o programa principal e resolve o problema de ter duas main uma neste ficheiro e outra no testes.c
+#include "funcoes.c"
+#include <CUnit/CUnit.h>
+#include <CUnit/Basic.h>
 
-#include <stdio.h>
-#include <ctype.h> // Para usar a função toupper
-#include <string.h> // Para usar a função strcmp
-#include "main.h"
+// Função de teste
+void test_alteraPosicao() {
+    char matriz[2][6] = {"abcde", "fghij"};
 
-// Funções auxiliares (printMatriz, selecionaPosicao, alteraPosicao) permanecem iguais...
+    // Testar "riscado"
+    alteraPosicao(5, matriz, 0, 1, "riscado"); // deve alterar 'b' para '#'
+    CU_ASSERT_EQUAL(matriz[0][1], '#');
 
-void printMatriz(int L, int C, char carac[][C + 1]) {
-    for (int i = 0; i < L; i++) {
-        for (int j = 0; j < C && carac[i][j] != '\0'; j++)
-            printf("%c ", carac[i][j]);
-        printf("\n");
-    }
+    // Testar "branco"
+    matriz[1][2] = 'k';
+    alteraPosicao(5, matriz, 1, 2, "branco"); // deve alterar 'k' para 'K'
+    CU_ASSERT_EQUAL(matriz[1][2], 'K');
 }
 
-int selecionaPosicao(int L, int C, int *x, int *y) {
-    printf("Digite a linha e a coluna da posição desejada (começa em 0): ");
-    if (scanf("%d %d", x, y) != 2 || *x < 0 || *x >= L || *y < 0 || *y >= C) {
-        printf("Posição inválida!\n");
-        return 0; // Retorna 0 para indicar falha
-    }
-    return 1; // Retorna 1 para indicar sucesso
-}
-
-void alteraPosicao(int C, char carac[][C + 1], int x, int y, char *acao) {
-    if (acao == NULL) return;
-
-    if (strcmp(acao, "riscado") == 0) {
-        carac[x][y] = '#'; // Altera para "#"
-    } else if (strcmp(acao, "branco") == 0) {
-        carac[x][y] = toupper(carac[x][y]); // Altera para a letra maiúscula
-    } else {
-        printf("Ação inválida!\n");
-    }
-}
-
-#ifdef MAIN_PROGRAM // Compila o main apenas se MAIN_PROGRAM estiver definido
 int main() {
+#ifdef TEST_MODE
+    // Modo de testes
+    CU_initialize_registry();
+
+    CU_pSuite suite = CU_add_suite("Testes de alteraPosicao", 0, 0);
+    CU_add_test(suite, "Teste de alteraPosicao", test_alteraPosicao);
+
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+#else
+    // Modo normal
     int i, L, C, x, y;
     char acao[10];
     if (scanf("%d %d", &L, &C) != 2) return 1;
@@ -59,7 +49,6 @@ int main() {
         alteraPosicao(C, carac, x, y, acao);
         printMatriz(L, C, carac); // Imprime a matriz após a alteração
     }
-
+#endif
     return 0;
 }
-#endif

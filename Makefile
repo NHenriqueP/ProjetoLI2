@@ -4,6 +4,6 @@ jogo:
 clean: 
 	rm jogo
 
-testar: testes.c main.c
-	gcc -o testes testes.c main.c -DTEST_MODE -lcunit
+testar:
+	gcc main.c -o testes -DTEST_MODE -lcunit -Wall -Wextra -pedantic -g
 	./testes
