@@ -6,35 +6,36 @@
 
 // Funções auxiliares (printMatriz, selecionaPosicao, alteraPosicao) permanecem iguais...
 
-void printMatriz(int L, int C, char carac[][C + 1]) {
-        for (int i = 0; i < L; i++) {
-            for (int j = 0; j < C && carac[i][j] != '\0'; j++)
-                printf("%c ", carac[i][j]);
-            printf("\n");
+void printMatriz(int L, int C, char **carac) {
+    for (int i = 0; i < L; i++) {
+        for (int j = 0; j < C && carac[i][j] != '\0'; j++) {
+            printf("%c ", carac[i][j]);
         }
         printf("\n");
     }
+    printf("\n");
+}
 
-void salvarJogo( char *nomeArquivo, int L, int C, char carac[][C + 1]) {
-        FILE *arquivo = fopen(nomeArquivo, "w");
-        if (arquivo == NULL) {
-            printf("Erro ao abrir o arquivo para salvar o jogo!\n");
-            return;
-        }
-    
-        // Salvar as dimensões da matriz
-        fprintf(arquivo, "%d %d\n", L, C);
-    
-        // Salvar o conteúdo da matriz
-        for (int i = 0; i < L; i++) {
-            fprintf(arquivo, "%s\n", carac[i]);
-        }
-    
-        fclose(arquivo);
-        printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
+void salvarJogo(char *nomeArquivo, int L, int C, char **carac) {
+    FILE *arquivo = fopen(nomeArquivo, "w");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para salvar o jogo!\n");
+        return;
     }
 
-int carregarJogo(const char *nomeArquivo, int *L, int *C, char ***carac) {
+    // Salvar as dimensões da matriz
+    fprintf(arquivo, "%d %d\n", L, C);
+
+    // Salvar o conteúdo da matriz
+    for (int i = 0; i < L; i++) {
+        fprintf(arquivo, "%s\n", carac[i]);
+    }
+
+    fclose(arquivo);
+    printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
+}
+
+int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
     FILE *arquivo = fopen(nomeArquivo, "r");
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo para carregar o jogo!\n");
@@ -111,8 +112,7 @@ int determinarCoordenadas(char *coordenada, int *x, int *y) {
     return 1; // Retorna 1 para indicar sucesso
 }
 
-// Funcao para executar o comando "r" (riscar)
-void executarComandoR(int L, int C, char carac[][C + 1], const char *comando) {
+void executarComandoR(int L, int C, char **carac, char *comando) {
     char coordenada[10];
     if (sscanf(comando, "r %s", coordenada) != 1) {
         printf("Comando inválido!\n");
@@ -141,8 +141,7 @@ void executarComandoR(int L, int C, char carac[][C + 1], const char *comando) {
     printf("Posição (%c, %d) alterada para '#'.\n", linha, y + 1);
 }
 
-// Funcao para executar o comando "b" (colocar em maiúsculas)
-void executarComandoB(int L, int C, char carac[][C + 1], char *comando) {
+void executarComandoB(int L, int C, char **carac, char *comando) {
     char coordenada[10];
     if (sscanf(comando, "b %s", coordenada) != 1) {
         printf("Comando inválido!\n");
