@@ -51,7 +51,7 @@ int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
     printf("Dimensões lidas: L = %d, C = %d\n", *L, *C);
 
     // Alocar memória para a matriz
-    *carac = (char **)malloc(*L * sizeof(char *));
+    *carac = malloc(*L * sizeof(char *));
     if (*carac == NULL) {
         printf("Erro ao alocar memória para a matriz!\n");
         fclose(arquivo);
@@ -59,7 +59,7 @@ int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
     }
 
     for (int i = 0; i < *L; i++) {
-        (*carac)[i] = (char *)malloc((*C + 1) * sizeof(char));
+        (*carac)[i] = malloc((*C + 1) * sizeof(char));
         if ((*carac)[i] == NULL) {
             printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
             fclose(arquivo);
