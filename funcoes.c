@@ -90,8 +90,8 @@ int determinarCoordenadas(char *coordenada, int *x, int *y) {
     }
 
     // A primeira parte da coordenada é a letra (linha)
-    char linha = toupper(coordenada[0]); // Converte para maiúscula
-    if (linha < 'A') {
+    char linha = coordenada[0];
+    if (!islower(linha)) { // Verifica se a letra não é minúscula
         printf("Coordenada inválida!\n");
         return 0;
     }
@@ -104,7 +104,7 @@ int determinarCoordenadas(char *coordenada, int *x, int *y) {
     }
 
     // Converte a letra para o índice da linha (0-indexado)
-    *x = linha - 'A';
+    *x = linha - 'a';
 
     // Converte o número para o índice da coluna (0-indexado)
     *y = coluna - 1;

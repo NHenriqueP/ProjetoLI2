@@ -6,7 +6,7 @@
 
 void test_determinarCoordenadas() {
     int x, y;
-    CU_ASSERT_TRUE(determinarCoordenadas("A1", &x, &y));
+    CU_ASSERT_TRUE(determinarCoordenadas("a1", &x, &y));
     CU_ASSERT_EQUAL(x, 0);
     CU_ASSERT_EQUAL(y, 0);
 
@@ -14,8 +14,8 @@ void test_determinarCoordenadas() {
     CU_ASSERT_EQUAL(x, 2);
     CU_ASSERT_EQUAL(y, 2);
 
-    CU_ASSERT_FALSE(determinarCoordenadas("1A", &x, &y));
-    CU_ASSERT_FALSE(determinarCoordenadas("A0", &x, &y));
+    CU_ASSERT_FALSE(determinarCoordenadas("1a", &x, &y));
+    CU_ASSERT_FALSE(determinarCoordenadas("a0", &x, &y));
     CU_ASSERT_FALSE(determinarCoordenadas("", &x, &y));
 }
 
