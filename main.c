@@ -39,10 +39,7 @@ int main() {
             }
         }
 
-        // Limpar o buffer de entrada após o uso de scanf
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF);
-    
+
         // Loop principal
         while (1) {
             printMatriz(L, C, carac); // Imprime a matriz atual
