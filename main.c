@@ -6,9 +6,6 @@
 #include <stdlib.h>
 
 int main() {
-    #ifdef TEST_MODE
-    
-    #else
         // Modo normal
         int L, C;
         char comando[20];
@@ -102,6 +99,5 @@ int main() {
         }
         free(carac);
     
-    #endif
     return 0;
 }
