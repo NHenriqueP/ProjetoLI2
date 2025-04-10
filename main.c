@@ -32,10 +32,13 @@ int main() {
 
         for (int i = 0; i < L; i++) {
             if (scanf("%s", carac[i]) != 1) {
-                printf("Erro ao ler a linha %d\n", i);
+             printf("Erro ao ler a linha %d\n", i);
                 return 1;
-            }
+            }  
         }
+
+        // Limpa o buffer antes de usar fgets
+        while (getchar() != '\n');
 
 
         // Loop principal
