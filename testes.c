@@ -29,9 +29,8 @@ void test_salvar_e_carregar_jogo() {
 
     char **carregado = NULL;
     int l2, c2;
-    int sucesso = carregarJogo("teste_jogo.txt", &l2, &c2, &carregado);
 
-    CU_ASSERT_TRUE(sucesso);
+    CU_ASSERT_TRUE(carregarJogo("teste_jogo.txt", &l2, &c2, &carregado));
     CU_ASSERT_EQUAL(l2, L);
     CU_ASSERT_EQUAL(c2, C);
     CU_ASSERT_STRING_EQUAL(carregado[0], "abc");
