@@ -3,9 +3,6 @@
 #include <string.h> // Para usar a função strcmp
 #include <stdlib.h>
 
-
-// Funções auxiliares (printMatriz, selecionaPosicao, alteraPosicao) permanecem iguais...
-
 void printMatriz(int L, int C, char **carac) {
     for (int i = 0; i < L; i++) {
         for (int j = 0; j < C && carac[i][j] != '\0'; j++) {
