@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifndef TEST_MODE
+
 int main() {
         // Modo normal
         int L, C;
@@ -97,4 +97,3 @@ int main() {
     
     return 0;
 }
-#endif
