@@ -3,6 +3,50 @@
 #include <string.h> // Para usar a função strcmp
 #include <stdlib.h>
 
+// Estrutura para armazenar o histórico de comandos
+typedef struct {
+    char tipoComando;  // Tipo do comando ('r', 'b', 'g', 'l', etc.)
+    int x, y;          // Coordenadas da célula (se aplicável)
+    char **estadoMatriz; // Estado completo da matriz antes do comando
+    int L, C;          // Dimensões da matriz no momento do comando
+} Historico;
+
+// Pilha para armazenar o histórico
+Historico *pilha = NULL;
+int topo = -1; // Índice do topo da pilha
+
+// Funcao para salvar o estado atual da matriz na pilha
+char **copiarMatriz(int L, int C, char **carac) {
+    char **copia = (char **)malloc(L * sizeof(char *));
+    for (int i = 0; i < L; i++) {
+        copia[i] = (char *)malloc((C + 1) * sizeof(char));
+        strcpy(copia[i], carac[i]);
+    }
+    return copia;
+}
+
+void liberarMatriz(int L, char **matriz) {
+    for (int i = 0; i < L; i++) {
+        free(matriz[i]);
+    }
+    free(matriz);
+}
+
+void empilharComando(char tipoComando, int x, int y, int L, int C, char **carac) {
+    topo++;
+    pilha = realloc(pilha, (topo + 1) * sizeof(Historico));
+    if (pilha == NULL) {
+        printf("Erro ao alocar memória para o histórico de comandos!\n");
+        exit(1);
+    }
+    pilha[topo].tipoComando = tipoComando;
+    pilha[topo].x = x;
+    pilha[topo].y = y;
+    pilha[topo].L = L;
+    pilha[topo].C = C;
+    pilha[topo].estadoMatriz = copiarMatriz(L, C, carac);
+}
+
 void printMatriz(int L, int C, char **carac) {
     for (int i = 0; i < L; i++) {
         for (int j = 0; j < C && carac[i][j] != '\0'; j++) {
@@ -122,20 +166,17 @@ void executarComandoR(int L, int C, char **carac, char *comando) {
         return;
     }
 
-    // Verifica se as coordenadas estão dentro dos limites da matriz
     if (x < 0 || x >= L || y < 0 || y >= C) {
         printf("Coordenadas fora dos limites da matriz!\n");
         return;
     }
 
-    // Altera a posição na matriz para '#'
+    // Salvar o estado atual no histórico
+    empilharComando('r', x, y, L, C, carac);
+
+    // Modificar a matriz
     carac[x][y] = '#';
-
-    // Converte o índice da linha (x) de volta para uma letra
-    char linha = 'a' + x;
-
-    // Imprime a mensagem no formato solicitado
-    printf("Posição (%c, %d) alterada para '#'.\n", linha, y + 1);
+    printf("Posição (%c, %d) alterada para '#'.\n", 'a' + x, y + 1);
 }
 
 void executarComandoB(int L, int C, char **carac, char *comando) {
@@ -151,18 +192,37 @@ void executarComandoB(int L, int C, char **carac, char *comando) {
         return;
     }
 
-    // Verifica se as coordenadas estão dentro dos limites da matriz
     if (x < 0 || x >= L || y < 0 || y >= C) {
         printf("Coordenadas fora dos limites da matriz!\n");
         return;
     }
 
-    // Converte a letra na posição especificada para maiúscula
+    // Salvar o estado atual no histórico
+    empilharComando('b', x, y, L, C, carac);
+
+    // Modificar a matriz
     carac[x][y] = toupper(carac[x][y]);
+    printf("Posição (%c, %d) alterada para '%c'.\n", 'a' + x, y + 1, carac[x][y]);
+}
 
-    // Converte o índice da linha (x) de volta para uma letra minúscula
-    char linha = 'a' + x;
+// Função para desfazer o último comando
+void desfazerComando(char ***carac, int *L, int *C) {
+    if (topo == -1) {
+        printf("Nenhum comando para desfazer!\n");
+        return;
+    }
 
-    // Imprime a mensagem no formato solicitado
-    printf("Posição (%c, %d) alterada para '%c'.\n", linha, y + 1, carac[x][y]);
+    // Recuperar o último comando
+    Historico ultimo = pilha[topo];
+    topo--;
+
+    // Liberar a matriz atual
+    liberarMatriz(*L, *carac);
+
+    // Restaurar o estado anterior da matriz
+    *carac = ultimo.estadoMatriz;
+    *L = ultimo.L;
+    *C = ultimo.C;
+
+    printf("Comando '%c' desfeito. Estado anterior restaurado.\n", ultimo.tipoComando);
 }
