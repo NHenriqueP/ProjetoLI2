@@ -6,7 +6,6 @@
 // Estrutura para armazenar o histórico de comandos
 typedef struct {
     char tipoComando;  // Tipo do comando ('r', 'b', 'g', 'l', etc.)
-    int x, y;          // Coordenadas da célula (se aplicável)
     char **estadoMatriz; // Estado completo da matriz antes do comando
     int L, C;          // Dimensões da matriz no momento do comando
 } Historico;
@@ -32,7 +31,35 @@ void liberarMatriz(int L, char **matriz) {
     free(matriz);
 }
 
-void empilharComando(char tipoComando, int x, int y, int L, int C, char **carac) {
+
+int temLetrasOrtogonais(int i, int j, char **carac, int L, int C) {
+    int resultado = 0; // Inicializa a variável para armazenar o resultado
+
+    // Verificar as condições de limites e se a posição contém uma letra
+    if (i >= 0 && i < L && j >= 0 && j < C && isalpha(carac[i][j])) {
+        // Verificar as posições ortogonais (cima, baixo, esquerda, direita)
+        if (i > 0 && isalpha(carac[i - 1][j])) resultado = 1; // Cima
+        if (i < L - 1 && isalpha(carac[i + 1][j])) resultado = 1; // Baixo
+        if (j > 0 && isalpha(carac[i][j - 1])) resultado = 1; // Esquerda
+        if (j < C - 1 && isalpha(carac[i][j + 1])) resultado = 1; // Direita
+    }
+
+    return resultado; // Retorna o resultado final da verificação
+}
+
+int isoladoOrtogonais(int i, int j, int L, int C, char **carac) {
+    int resultado = 1; // Inicializa como 1 (isolado), depois verifica se não é isolado
+
+    // Verificar as posições ortogonais
+    if (temLetrasOrtogonais(i - 1, j, carac, L, C)) resultado = 0; // Se em cima tiver letras
+    if (temLetrasOrtogonais(i + 1, j, carac, L, C)) resultado = 0; // Se em baixo tiver letras
+    if (temLetrasOrtogonais(i, j - 1, carac, L, C)) resultado = 0; // Se esquerda tiver letras
+    if (temLetrasOrtogonais(i, j + 1, carac, L, C)) resultado = 0; // Se direita tiver letras
+
+    return resultado; // Retorna se está isolado ou não
+}
+
+void empilharComando(char tipoComando, int L, int C, char **carac) {
     topo++;
     pilha = realloc(pilha, (topo + 1) * sizeof(Historico));
     if (pilha == NULL) {
@@ -40,8 +67,6 @@ void empilharComando(char tipoComando, int x, int y, int L, int C, char **carac)
         exit(1);
     }
     pilha[topo].tipoComando = tipoComando;
-    pilha[topo].x = x;
-    pilha[topo].y = y;
     pilha[topo].L = L;
     pilha[topo].C = C;
     pilha[topo].estadoMatriz = copiarMatriz(L, C, carac);
@@ -172,10 +197,14 @@ void executarComandoR(int L, int C, char **carac, char *comando) {
     }
 
     // Salvar o estado atual no histórico
-    empilharComando('r', x, y, L, C, carac);
+    empilharComando('r', L, C, carac);
 
     // Modificar a matriz
     carac[x][y] = '#';
+    if (x+1<L) carac[x+1][y] = toupper(carac[x+1][y]);
+    if (x-1 >= 0) carac[x-1][y] = toupper(carac[x-1][y]);
+    if (y+1<C) carac[x][y+1] = toupper(carac[x][y+1]);
+    if (y-1>=0) carac[x][y-1] = toupper(carac[x][y-1]);
     printf("Posição (%c, %d) alterada para '#'.\n", 'a' + x, y + 1);
 }
 
@@ -198,11 +227,63 @@ void executarComandoB(int L, int C, char **carac, char *comando) {
     }
 
     // Salvar o estado atual no histórico
-    empilharComando('b', x, y, L, C, carac);
+    empilharComando('b', L, C, carac);
 
     // Modificar a matriz
     carac[x][y] = toupper(carac[x][y]);
     printf("Posição (%c, %d) alterada para '%c'.\n", 'a' + x, y + 1, carac[x][y]);
+}
+
+void executarComandoA(int L, int C, char **carac) {
+
+    int k, i, j;
+
+    // Salvar o estado atual no histórico
+    empilharComando('a', L, C, carac);
+
+ // riscar todas as letras iguais a uma letra branca na mesma linha e/ou coluna
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (isupper(carac[i][j])) {
+                char z = tolower(carac[i][j]);
+                for (k = 0; k < L; k++) {
+                    if (carac[k][j] == z) {
+                        carac[k][j] = '#';
+                    }
+                }
+                for (k = 0; k < C; k++) {
+                    if (carac[i][k] == z) {
+                        carac[i][k] = '#';
+                    }
+                }
+            }
+        }
+    }
+
+    //  pintar de branco todas as casas vizinhas de uma casa riscada
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (carac[i][j] == '#') {
+                if (i + 1 < L) carac[i + 1][j] = toupper(carac[i + 1][j]);
+                if (i - 1 >= 0) carac[i - 1][j] = toupper(carac[i - 1][j]);
+                if (j + 1 < C) carac[i][j + 1] = toupper(carac[i][j + 1]);
+                if (j - 1 >= 0) carac[i][j - 1] = toupper(carac[i][j - 1]);
+            }
+        }
+    }
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (carac[i][j] != '#') { // Verifica se a casa não está riscada
+                char z = carac[i][j];
+                carac[i][j] = '#'; // Temporariamente risca a casa
+                if (isoladoOrtogonais(i, j, L, C, carac)) {
+                    carac[i][j] = toupper(z); // Pinta de branco (maiúscula) se isolar
+                }  else {
+                    carac[i][j] = z; // Restaura o valor original se não isolar
+        }
+    }
+}
+}
 }
 
 // Função para desfazer o último comando

@@ -45,7 +45,7 @@ int main() {
         while (1) {
             printMatriz(L, C, carac); // Imprime a matriz atual
     
-            printf("Digite um comando:\n-s para sair\n-g para guardar o jogo\n-l para carregar o jogo\n-r <coordenada> para riscar uma posição\n-b <coordenada> para colocar em maiusculas uma posição\n-d para desfazer o último comando\n");
+            printf("Digite um comando:\n-s para sair\n-g para guardar o jogo\n-l para carregar o jogo\n-r <coordenada> para riscar uma posição\n-b <coordenada> para colocar em maiusculas uma posição\n-d para desfazer o último comando\n-a ajudar mudando o estado de todas as casas que se conseguem inferir através do estado atual do tabuleiro\n");
             if (fgets(comando, sizeof(comando), stdin) == NULL) {
                 printf("Erro ao ler o comando!\n");
                 return 1;
@@ -66,7 +66,7 @@ int main() {
             // Verifica se o comando é 'l' para carregar o jogo
             if (comando[0] == 'l' && comando[1] == '\n') {
                 // Salvar o estado atual no histórico antes de carregar o novo jogo
-                empilharComando('l', -1, -1, L, C, carac);
+                empilharComando('l', L, C, carac);
 
                 // Liberar a memória da matriz atual antes de carregar um novo jogo
                 for (int i = 0; i < L; i++) {
@@ -97,6 +97,11 @@ int main() {
             // Verifica se o comando é "d" para desfazer o último comando
             if (comando[0] == 'd' && comando[1] == '\n') {
                 desfazerComando(&carac, &L, &C);
+                continue;
+            }
+
+            if (comando[0] == 'a' && comando[1] == '\n') {
+                executarComandoA(L, C, carac);
                 continue;
             }
         }
