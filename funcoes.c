@@ -234,7 +234,7 @@ void executarComandoB(int L, int C, char **carac, char *comando) {
     printf("Posição (%c, %d) alterada para '%c'.\n", 'a' + x, y + 1, carac[x][y]);
 }
 
-void executarComandoA(int L, int C, char **carac) {
+void executarComandoa(int L, int C, char **carac) {
 
     int k, i, j;
 
@@ -284,6 +284,74 @@ void executarComandoA(int L, int C, char **carac) {
     }
 }
 }
+}
+
+void executarComandov(int L, int C, char **carac) {
+    int i, j;
+    int tudocerto = 1;
+    int iguais = 0;
+
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (carac[i][j] == '#') {
+                // Verifica se as letras ao lado de '#' são maiúsculas
+                if (i + 1 < L && isalpha(carac[i + 1][j]) && !isupper(carac[i + 1][j])) {
+                    tudocerto = 0;
+                    printf("Restrição violada na linha %d e coluna %d (abaixo).\n", i + 2, j + 1);
+                }
+                if (i - 1 >= 0 && isalpha(carac[i - 1][j]) && !isupper(carac[i - 1][j])) {
+                    tudocerto = 0;
+                    printf("Restrição violada na linha %d e coluna %d (acima).\n", i, j + 1);
+                }
+                if (j + 1 < C && isalpha(carac[i][j + 1]) && !isupper(carac[i][j + 1])) {
+                    tudocerto = 0;
+                    printf("Restrição violada na linha %d e coluna %d (à direita).\n", i + 1, j + 2);
+                }
+                if (j - 1 >= 0 && isalpha(carac[i][j - 1]) && !isupper(carac[i][j - 1])) {
+                    tudocerto = 0;
+                    printf("Restrição violada na linha %d e coluna %d (à esquerda).\n", i + 1, j);
+                }
+            }
+
+            // Verifica se existem letras iguais na mesma linha ou coluna
+            if (isalpha(carac[i][j])) {
+                char letra = carac[i][j];
+
+                // Verifica na mesma linha
+                for (int k = 0; k < C; k++) {
+                    if (k != j && carac[i][k] == letra) {
+                        tudocerto = 0;
+                        iguais = 1;
+                    }
+                }
+
+                // Verifica na mesma coluna
+                for (int k = 0; k < L; k++) {
+                    if (k != i && carac[k][j] == letra) {
+                        tudocerto = 0;
+                        iguais = 1;
+                    }
+                }
+            }
+
+            // Verifica se ao lado de uma letra maiúscula existe pelo menos uma outra maiúscula
+            if (isupper(carac[i][j])) {
+                int temMaiuscula = 0;
+
+                if (i + 1 < L && isalpha(carac[i + 1][j])) temMaiuscula = 1; // Abaixo
+                if (i - 1 >= 0 && isalpha(carac[i - 1][j])) temMaiuscula = 1; // Acima
+                if (j + 1 < C && isalpha(carac[i][j + 1])) temMaiuscula = 1; // Direita
+                if (j - 1 >= 0 && isalpha(carac[i][j - 1])) temMaiuscula = 1; // Esquerda
+
+                if (!temMaiuscula) {
+                    tudocerto = 0;
+                    printf("Restrição violada: letra maiúscula na linha %d e coluna %d não nenhum caminho ortogonal.\n", i + 1, j + 1);
+                }
+            }
+        }
+    }
+    if (iguais) printf("Existem letras repetidas na mesma linha ou coluna.\n");
+    if (tudocerto) printf("Não foi violada nenhuma das restrições.\n");
 }
 
 // Função para desfazer o último comando

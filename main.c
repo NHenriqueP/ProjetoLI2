@@ -101,7 +101,11 @@ int main() {
             }
 
             if (comando[0] == 'a' && comando[1] == '\n') {
-                executarComandoA(L, C, carac);
+                executarComandoa(L, C, carac);
+                continue;
+            }
+            if (comando[0] == 'v' && comando[1] == '\n') {
+                executarComandov(L, C, carac);
                 continue;
             }
         }
