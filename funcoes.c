@@ -96,6 +96,9 @@ void salvarJogo(char *nomeArquivo, int L, int C, char **carac) {
     for (int i = 0; i < L; i++) {
         fprintf(arquivo, "%s\n", carac[i]);
     }
+    
+    // Salvar o estado atual no histórico
+    empilharComando('g', L, C, carac);
 
     fclose(arquivo);
     printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
@@ -235,13 +238,12 @@ void executarComandoB(int L, int C, char **carac, char *comando) {
 }
 
 void executarComandoa(int L, int C, char **carac) {
-
     int k, i, j;
 
     // Salvar o estado atual no histórico
     empilharComando('a', L, C, carac);
 
- // riscar todas as letras iguais a uma letra branca na mesma linha e/ou coluna
+    // 1. Riscar todas as letras iguais a uma letra branca na mesma linha e/ou coluna
     for (i = 0; i < L; i++) {
         for (j = 0; j < C; j++) {
             if (isupper(carac[i][j])) {
@@ -260,30 +262,32 @@ void executarComandoa(int L, int C, char **carac) {
         }
     }
 
-    //  pintar de branco todas as casas vizinhas de uma casa riscada
+    // 2. Pintar de branco todas as casas vizinhas de uma casa riscada
     for (i = 0; i < L; i++) {
         for (j = 0; j < C; j++) {
             if (carac[i][j] == '#') {
-                if (i + 1 < L) carac[i + 1][j] = toupper(carac[i + 1][j]);
-                if (i - 1 >= 0) carac[i - 1][j] = toupper(carac[i - 1][j]);
-                if (j + 1 < C) carac[i][j + 1] = toupper(carac[i][j + 1]);
-                if (j - 1 >= 0) carac[i][j - 1] = toupper(carac[i][j - 1]);
+                if (i + 1 < L && islower(carac[i + 1][j])) carac[i + 1][j] = toupper(carac[i + 1][j]);
+                if (i - 1 >= 0 && islower(carac[i - 1][j])) carac[i - 1][j] = toupper(carac[i - 1][j]);
+                if (j + 1 < C && islower(carac[i][j + 1])) carac[i][j + 1] = toupper(carac[i][j + 1]);
+                if (j - 1 >= 0 && islower(carac[i][j - 1])) carac[i][j - 1] = toupper(carac[i][j - 1]);
             }
         }
     }
+
+    // 3. Pintar de branco casas que não podem ser riscadas por isolar casas brancas
     for (i = 0; i < L; i++) {
         for (j = 0; j < C; j++) {
-            if (carac[i][j] != '#') { // Verifica se a casa não está riscada
+            if (carac[i][j] != '#' && islower(carac[i][j])) { // Verifica se a casa não está riscada e é minúscula
                 char z = carac[i][j];
                 carac[i][j] = '#'; // Temporariamente risca a casa
                 if (isoladoOrtogonais(i, j, L, C, carac)) {
                     carac[i][j] = toupper(z); // Pinta de branco (maiúscula) se isolar
-                }  else {
+                } else {
                     carac[i][j] = z; // Restaura o valor original se não isolar
+                }
+            }
         }
     }
-}
-}
 }
 
 void executarComandov(int L, int C, char **carac) {
@@ -350,6 +354,8 @@ void executarComandov(int L, int C, char **carac) {
             }
         }
     }
+    // Salvar o estado atual no histórico
+    empilharComando('v', L, C, carac);
     if (iguais) printf("Existem letras repetidas na mesma linha ou coluna.\n");
     if (tudocerto) printf("Não foi violada nenhuma das restrições.\n");
 }
@@ -363,6 +369,13 @@ void desfazerComando(char ***carac, int *L, int *C) {
 
     // Recuperar o último comando
     Historico ultimo = pilha[topo];
+
+    // Verifica se o comando é 'v'
+    if (ultimo.tipoComando == 'v') {
+        printf("O comando 'v' não pode ser desfeito!\n");
+        return;
+    }
+
     topo--;
 
     // Liberar a matriz atual
