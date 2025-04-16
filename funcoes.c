@@ -375,3 +375,99 @@ void desfazerComando(char ***carac, int *L, int *C) {
 
     printf("Comando '%c' desfeito. Estado anterior restaurado.\n", ultimo.tipoComando);
 }
+
+void resolverJogo(int L, int C, char **carac) {
+    int mudou; // Variável para verificar se houve mudanças no tabuleiro
+
+    do {
+        mudou = 0;
+
+        // 1. Pintar de branco uma única réplica de cada símbolo em cada linha e coluna
+        for (int i = 0; i < L; i++) {
+            for (int j = 0; j < C; j++) {
+                if (islower(carac[i][j])) { // Se for uma letra minúscula
+                    char simbolo = carac[i][j];
+                    int unico = 1;
+
+                    // Verificar se o símbolo é único na linha
+                    for (int k = 0; k < C; k++) {
+                        if (k != j && carac[i][k] == simbolo) {
+                            unico = 0;
+                            break;
+                        }
+                    }
+
+                    // Verificar se o símbolo é único na coluna
+                    for (int k = 0; k < L; k++) {
+                        if (k != i && carac[k][j] == simbolo) {
+                            unico = 0;
+                            break;
+                        }
+                    }
+
+                    // Se for único, pintar de branco (maiúscula)
+                    if (unico) {
+                        carac[i][j] = toupper(carac[i][j]);
+                        mudou = 1;
+                    }
+                }
+            }
+        }
+
+        // 2. Riscar todas as outras réplicas do mesmo símbolo
+        for (int i = 0; i < L; i++) {
+            for (int j = 0; j < C; j++) {
+                if (isupper(carac[i][j])) { // Se for uma letra maiúscula
+                    char simbolo = tolower(carac[i][j]); // Obter o símbolo original em minúscula
+
+                    // Riscar todas as réplicas na mesma linha
+                    for (int k = 0; k < C; k++) {
+                        if (carac[i][k] == simbolo) { // Se for uma réplica
+                            carac[i][k] = '#'; // Riscar
+                            mudou = 1;
+                        }
+                    }
+
+                    // Riscar todas as réplicas na mesma coluna
+                    for (int k = 0; k < L; k++) {
+                        if (carac[k][j] == simbolo) { // Se for uma réplica
+                            carac[k][j] = '#'; // Riscar
+                            mudou = 1;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. Pintar de branco todas as casas vizinhas ortogonais de uma casa riscada
+        for (int i = 0; i < L; i++) {
+            for (int j = 0; j < C; j++) {
+                if (carac[i][j] == '#') { // Se for uma casa riscada
+                    // Verificar vizinho acima
+                    if (i > 0 && islower(carac[i - 1][j])) {
+                        carac[i - 1][j] = toupper(carac[i - 1][j]);
+                        mudou = 1;
+                    }
+                    // Verificar vizinho abaixo
+                    if (i < L - 1 && islower(carac[i + 1][j])) {
+                        carac[i + 1][j] = toupper(carac[i + 1][j]);
+                        mudou = 1;
+                    }
+                    // Verificar vizinho à esquerda
+                    if (j > 0 && islower(carac[i][j - 1])) {
+                        carac[i][j - 1] = toupper(carac[i][j - 1]);
+                        mudou = 1;
+                    }
+                    // Verificar vizinho à direita
+                    if (j < C - 1 && islower(carac[i][j + 1])) {
+                        carac[i][j + 1] = toupper(carac[i][j + 1]);
+                        mudou = 1;
+                    }
+                }
+            }
+        }
+
+    } while (mudou); // Repete enquanto houver mudanças no tabuleiro
+
+    printf("Jogo resolvido automaticamente.\n");
+}
