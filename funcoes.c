@@ -32,33 +32,6 @@ void liberarMatriz(int L, char **matriz) {
 }
 
 
-int temLetrasOrtogonais(int i, int j, char **carac, int L, int C) {
-    int resultado = 0; // Inicializa a variável para armazenar o resultado
-
-    // Verificar as condições de limites e se a posição contém uma letra
-    if (i >= 0 && i < L && j >= 0 && j < C && isalpha(carac[i][j])) {
-        // Verificar as posições ortogonais (cima, baixo, esquerda, direita)
-        if (i > 0 && isalpha(carac[i - 1][j])) resultado = 1; // Cima
-        if (i < L - 1 && isalpha(carac[i + 1][j])) resultado = 1; // Baixo
-        if (j > 0 && isalpha(carac[i][j - 1])) resultado = 1; // Esquerda
-        if (j < C - 1 && isalpha(carac[i][j + 1])) resultado = 1; // Direita
-    }
-
-    return resultado; // Retorna o resultado final da verificação
-}
-
-int isoladoOrtogonais(int i, int j, int L, int C, char **carac) {
-    int resultado = 1; // Inicializa como 1 (isolado), depois verifica se não é isolado
-
-    // Verificar as posições ortogonais
-    if (temLetrasOrtogonais(i - 1, j, carac, L, C)) resultado = 0; // Se em cima tiver letras
-    if (temLetrasOrtogonais(i + 1, j, carac, L, C)) resultado = 0; // Se em baixo tiver letras
-    if (temLetrasOrtogonais(i, j - 1, carac, L, C)) resultado = 0; // Se esquerda tiver letras
-    if (temLetrasOrtogonais(i, j + 1, carac, L, C)) resultado = 0; // Se direita tiver letras
-
-    return resultado; // Retorna se está isolado ou não
-}
-
 void empilharComando(char tipoComando, int L, int C, char **carac) {
     topo++;
     pilha = realloc(pilha, (topo + 1) * sizeof(Historico));
@@ -237,6 +210,71 @@ void executarComandoB(int L, int C, char **carac, char *comando) {
     printf("Posição (%c, %d) alterada para '%c'.\n", 'a' + x, y + 1, carac[x][y]);
 }
 
+int temLetrasOrtogonais(int i, int j, char **carac, int L, int C) {
+    int resultado = 0;
+    // Verificar se a posição atual está dentro dos limites e não é riscada
+    if (i < 0 || i >= L || j < 0 || j >= C || carac[i][j] == '#') return 0;
+
+    // Verificar as posições ortogonais (cima, baixo, esquerda, direita)
+    if (i > 0 && carac[i - 1][j] != '#' && isalpha(carac[i - 1][j])) resultado = 1; // Cima
+    if (i < L - 1 && carac[i + 1][j] != '#' && isalpha(carac[i + 1][j])) resultado = 1; // Baixo
+    if (j > 0 && carac[i][j - 1] != '#' && isalpha(carac[i][j - 1])) resultado = 1; // Esquerda
+    if (j < C - 1 && carac[i][j + 1] != '#' && isalpha(carac[i][j + 1])) resultado = 1; // Direita
+
+    return resultado; // Não há letras nas posições ortogonais
+}
+
+int isoladoOrtogonais(int i, int j, int L, int C, char **carac) {
+    // Verificar se a posição está isolada (nenhuma direção tem letras válidas)
+    if (!temLetrasOrtogonais(i - 1, j, carac, L, C) && // Cima
+        !temLetrasOrtogonais(i + 1, j, carac, L, C) && // Baixo
+        !temLetrasOrtogonais(i, j - 1, carac, L, C) && // Esquerda
+        !temLetrasOrtogonais(i, j + 1, carac, L, C)) { // Direita
+        return 1; // Está isolado
+    }
+    return 0; // Não está isolado
+}
+
+int vizinhaFicaIsolada(int i, int j, int L, int C, char **carac) {
+    // CIMA
+    if (i > 0 && isalpha(carac[i - 1][j]) && carac[i - 1][j] != '#') {
+        char original = carac[i][j];
+        carac[i][j] = '#';
+        int isolada = isoladoOrtogonais(i - 1, j, L, C, carac);
+        carac[i][j] = original;
+        if (isolada) return 1;
+    }
+
+    // BAIXO
+    if (i < L - 1 && isalpha(carac[i + 1][j]) && carac[i + 1][j] != '#') {
+        char original = carac[i][j];
+        carac[i][j] = '#';
+        int isolada = isoladoOrtogonais(i + 1, j, L, C, carac);
+        carac[i][j] = original;
+        if (isolada) return 1;
+    }
+
+    // ESQUERDA
+    if (j > 0 && isalpha(carac[i][j - 1]) && carac[i][j - 1] != '#') {
+        char original = carac[i][j];
+        carac[i][j] = '#';
+        int isolada = isoladoOrtogonais(i, j - 1, L, C, carac);
+        carac[i][j] = original;
+        if (isolada) return 1;
+    }
+    
+    // DIREITA
+    if (j < C - 1 && isalpha(carac[i][j + 1]) && carac[i][j + 1] != '#') {
+        char original = carac[i][j];
+        carac[i][j] = '#';
+        int isolada = isoladoOrtogonais(i, j + 1, L, C, carac);
+        carac[i][j] = original;
+        if (isolada) return 1;
+    }
+
+    return 0; // Nenhuma vizinha ficaria isolada
+}
+
 void executarComandoa(int L, int C, char **carac) {
     int k, i, j;
 
@@ -274,16 +312,11 @@ void executarComandoa(int L, int C, char **carac) {
         }
     }
 
-    // 3. Pintar de branco casas que não podem ser riscadas por isolar casas brancas
     for (i = 0; i < L; i++) {
         for (j = 0; j < C; j++) {
-            if (carac[i][j] != '#' && islower(carac[i][j])) { // Verifica se a casa não está riscada e é minúscula
-                char z = carac[i][j];
-                carac[i][j] = '#'; // Temporariamente risca a casa
-                if (isoladoOrtogonais(i, j, L, C, carac)) {
-                    carac[i][j] = toupper(z); // Pinta de branco (maiúscula) se isolar
-                } else {
-                    carac[i][j] = z; // Restaura o valor original se não isolar
+            if (carac[i][j] != '#' && islower(carac[i][j])) {
+                if (vizinhaFicaIsolada(i, j, L, C, carac)) {
+                    carac[i][j] = toupper(carac[i][j]);
                 }
             }
         }
@@ -355,7 +388,7 @@ void executarComandov(int L, int C, char **carac) {
         }
     }
     // Salvar o estado atual no histórico
-    empilharComando('v', L, C, carac);
+   // empilharComando('v', L, C, carac); deixei em comentario pq assim da para fazer o comando d dps de fazer o comando v
     if (iguais) printf("Existem letras repetidas na mesma linha ou coluna.\n");
     if (tudocerto) printf("Não foi violada nenhuma das restrições.\n");
 }
