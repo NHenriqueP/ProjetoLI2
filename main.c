@@ -51,8 +51,10 @@ int main() {
         printf("- b <coordenada> para colocar em maiúsculas uma posição\n");
         printf("- d para desfazer o último comando\n");
         printf("- a para ajudar mudando o estado de todas as casas que se conseguem inferir através do estado atual do tabuleiro\n");
+        printf("- A invocar o comando a enquanto o jogo sofrer alterações\n");
         printf("- v para verificar as restrições\n");
         printf("- R para resolver o jogo automaticamente\n");
+
 
         if (fgets(comando, sizeof(comando), stdin) == NULL) {
             printf("Erro ao ler o comando!\n");
@@ -123,6 +125,11 @@ int main() {
         // Verifica se o comando é "R" para resolver o jogo automaticamente
         if (comando[0] == 'R' && comando[1] == '\n') {
             resolverJogo(L, C, carac);
+            continue;
+        }
+
+        if (comando[0]== 'A' && comando[1] == '\n') {
+            executarComandoA(L, C, carac);
             continue;
         }
     }

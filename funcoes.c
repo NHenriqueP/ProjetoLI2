@@ -323,6 +323,37 @@ void executarComandoa(int L, int C, char **carac) {
     }
 }
 
+void executarComandoA(int L, int C, char **carac) {
+    int mudou = 1; // Inicialmente, assumimos que haverá mudanças
+
+    // Salvar o estado inicial no histórico
+    empilharComando('A', L, C, carac);
+
+    // Enquanto houver mudanças no tabuleiro
+    while (mudou) {
+        mudou = 0; // Resetar a variável de controle
+
+        // Copiar o estado atual da matriz para comparação
+        char **estadoAnterior = copiarMatriz(L, C, carac);
+
+        // Executar o comando `a`
+        executarComandoa(L, C, carac);
+
+        // Verificar se houve mudanças no tabuleiro
+        for (int i = 0; i < L; i++) {
+            if (strcmp(estadoAnterior[i], carac[i]) != 0) {
+                mudou = 1; // Detectamos mudanças
+                break;
+            }
+        }
+
+        // Liberar a memória da cópia do estado anterior
+        liberarMatriz(L, estadoAnterior);
+    }
+
+    printf("Comando 'A' executado: o tabuleiro foi atualizado até estabilizar.\n");
+}
+
 void executarComandov(int L, int C, char **carac) {
     int i, j;
     int tudocerto = 1;
