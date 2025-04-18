@@ -31,7 +31,6 @@ void liberarMatriz(int L, char **matriz) {
     free(matriz);
 }
 
-
 void empilharComando(char tipoComando, int L, int C, char **carac) {
     topo++;
     pilha = realloc(pilha, (topo + 1) * sizeof(Historico));
