@@ -209,6 +209,34 @@ void test_vizinhaFicaIsolada() {
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
 
+void test_comandoDesfazer() {
+    int L = 3, C = 3;
+    char **matriz = malloc(L * sizeof(char *));
+    matriz[0] = strdup("abc");
+    matriz[1] = strdup("def");
+    matriz[2] = strdup("ghi");
+
+    // Empilhar o estado inicial
+    empilharComando('r', L, C, matriz);
+
+    // Modificar a matriz
+    matriz[0][0] = '#';
+    matriz[1][1] = 'E';
+
+    // Desfazer o comando
+    desfazerComando(&matriz, &L, &C);
+
+    // Verificar se o estado foi restaurado
+    CU_ASSERT_STRING_EQUAL(matriz[0], "abc");
+    CU_ASSERT_STRING_EQUAL(matriz[1], "def");
+    CU_ASSERT_STRING_EQUAL(matriz[2], "ghi");
+
+    // Testar desfazer sem comandos na pilha
+    desfazerComando(&matriz, &L, &C); // Não deve causar erro
+
+    free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
+}
+
 int main() {
     CU_initialize_registry();
 
@@ -226,6 +254,7 @@ int main() {
     CU_add_test(suite, "Test executarComandov", test_executarComandov);
     CU_add_test(suite, "Test isoladoOrtogonais", test_isoladoOrtogonais);
     CU_add_test(suite, "Test vizinhaFicaIsolada", test_vizinhaFicaIsolada);
+    CU_add_test(suite, "Test comandoDesfazer", test_comandoDesfazer);
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
