@@ -16,9 +16,9 @@ int topo = -1; // Índice do topo da pilha
 
 // Funcao para salvar o estado atual da matriz na pilha
 char **copiarMatriz(int L, int C, char **carac) {
-    char **copia = (char **)malloc(L * sizeof(char *));
+    char **copia = malloc(L * sizeof(char *));
     for (int i = 0; i < L; i++) {
-        copia[i] = (char *)malloc((C + 1) * sizeof(char));
+        copia[i] = malloc((C + 1) * sizeof(char));
         strcpy(copia[i], carac[i]);
     }
     return copia;
