@@ -381,7 +381,7 @@ int executarComandov(int L, int C, char **carac) {
             }
 
             // Verifica se existem letras iguais na mesma linha ou coluna
-            if (isalpha(carac[i][j])) {
+            if (isupper(carac[i][j])) {
                 char letra = carac[i][j];
 
                 // Verifica na mesma linha
