@@ -176,10 +176,6 @@ void executarComandoR(int L, int C, char **carac, char *comando) {
 
     // Modificar a matriz
     carac[x][y] = '#';
-    if (x+1<L) carac[x+1][y] = toupper(carac[x+1][y]);
-    if (x-1 >= 0) carac[x-1][y] = toupper(carac[x-1][y]);
-    if (y+1<C) carac[x][y+1] = toupper(carac[x][y+1]);
-    if (y-1>=0) carac[x][y-1] = toupper(carac[x][y-1]);
     printf("Posição (%c, %d) alterada para '#'.\n", 'a' + x, y + 1);
 }
 
