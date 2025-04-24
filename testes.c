@@ -202,7 +202,13 @@ void test_isoladoOrtogonais() {
 
     // Verificar se uma célula está isolada
     CU_ASSERT_TRUE(isoladoOrtogonais(0, 0, L, C, matriz)); // A está isolado
-    CU_ASSERT_FALSE(isoladoOrtogonais(1, 1, L, C, matriz)); // # não está isolado
+    CU_ASSERT_FALSE(isoladoOrtogonais(1, 1, L, C, matriz)); //  não está isolado
+
+    matriz[0] = strdup("#DC");
+    matriz[1] = strdup("B#A");
+    matriz[2] = strdup("#BA");
+
+    CU_ASSERT_TRUE(isoladoOrtogonais(1, 0, L, C, matriz)); // B está isolado
 
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
@@ -211,12 +217,19 @@ void test_vizinhaFicaIsolada() {
     int L = 3, C = 3;
     char **matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("A#C");
-    matriz[1] = strdup("B#A");
+    matriz[1] = strdup("BDA");
     matriz[2] = strdup("CBA");
 
     // Verificar se uma célula vizinha ficaria isolada
     CU_ASSERT_TRUE(vizinhaFicaIsolada(1, 0, L, C, matriz)); // A ficaria isolado
-    CU_ASSERT_FALSE(vizinhaFicaIsolada(1, 1, L, C, matriz)); // # não causa isolamento
+    CU_ASSERT_FALSE(vizinhaFicaIsolada(1, 1, L, C, matriz)); // D não causa isolamento
+
+    matriz[0] = strdup("#DC");
+    matriz[1] = strdup("BCA");
+    matriz[2] = strdup("#BA");
+
+    CU_ASSERT_TRUE(vizinhaFicaIsolada(1, 1, L, C, matriz)); // B ficaria isolado
+    CU_ASSERT_FALSE(vizinhaFicaIsolada(1, 2, L, C, matriz)); // A nao causa isolamento
 
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
