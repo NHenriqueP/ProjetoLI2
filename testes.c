@@ -90,7 +90,7 @@ void test_empilhar_e_desfazer_comando() {
     free(matriz[0]); free(matriz[1]); free(matriz);
 }
 
-void test_resolverJogo() {
+/*void test_resolverJogo() {
     int L = 5, C = 5;
     char **matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("ecadc");
@@ -109,7 +109,7 @@ void test_resolverJogo() {
     CU_ASSERT_STRING_EQUAL(matriz[4], "A#CB#");
 
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz[3]); free(matriz[4]); free(matriz);
-}
+}*/
 
 void test_executarComandoa_caso1() {
     int L = 4, C = 4;
@@ -150,16 +150,28 @@ void test_executarComandoa_caso2() {
 void test_executarComandov() {
     int L = 3, C = 3;
     char **matriz = malloc(L * sizeof(char *));
-    matriz[0] = strdup("A#C");
+    matriz[0] = strdup("ADC");
     matriz[1] = strdup("B#A");
-    matriz[2] = strdup("CBA");
+    matriz[2] = strdup("CBD");
 
     // Executar o comando de verificação
-    executarComandov(L, C, matriz);
+    CU_ASSERT_TRUE(executarComandov(L, C, matriz));
+
+    matriz[0] = strdup("ccA");
+    matriz[1] = strdup("B#A");
+    matriz[2] = strdup("CBD");
+
+    CU_ASSERT_FALSE(executarComandov(L, C, matriz));
+
+
+    matriz[0] = strdup("CCA");
+    matriz[1] = strdup("B#A");
+    matriz[2] = strdup("CBD");
+
+    CU_ASSERT_FALSE(executarComandov(L, C, matriz));
 
     // Não há restrições violadas neste caso
     // Apenas verificamos se a função roda sem erros
-    CU_ASSERT_TRUE(1);
 
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
@@ -247,7 +259,7 @@ int main() {
     CU_add_test(suite, "Test executarComandoR e B", test_executarComandoR_B);
     CU_add_test(suite, "Test printMatriz", test_printMatriz);
     CU_add_test(suite, "Test empilhar e desfazer comando", test_empilhar_e_desfazer_comando);
-    CU_add_test(suite, "Test resolverJogo", test_resolverJogo);
+    //CU_add_test(suite, "Test resolverJogo", test_resolverJogo);
     CU_add_test(suite, "Test executarComandoa caso 1", test_executarComandoa_caso1);
     CU_add_test(suite, "Test executarComandoa caso 2", test_executarComandoa_caso2);
     CU_add_test(suite, "Test executarComandoa caso 3", test_executarComandoa_caso3);

@@ -353,7 +353,7 @@ void executarComandoA(int L, int C, char **carac) {
     printf("Comando 'A' executado: o tabuleiro foi atualizado até estabilizar.\n");
 }
 
-void executarComandov(int L, int C, char **carac) {
+int executarComandov(int L, int C, char **carac) {
     int i, j;
     int tudocerto = 1;
     int iguais = 0;
@@ -412,7 +412,7 @@ void executarComandov(int L, int C, char **carac) {
 
                 if (!temMaiuscula) {
                     tudocerto = 0;
-                    printf("Restrição violada: letra maiúscula na linha %d e coluna %d não nenhum caminho ortogonal.\n", i + 1, j + 1);
+                    printf("Restrição violada: letra maiúscula na linha %d e coluna %d não tem nenhum caminho ortogonal.\n", i + 1, j + 1);
                 }
             }
         }
@@ -421,6 +421,7 @@ void executarComandov(int L, int C, char **carac) {
    // empilharComando('v', L, C, carac); deixei em comentario pq assim da para fazer o comando d dps de fazer o comando v
     if (iguais) printf("Existem letras repetidas na mesma linha ou coluna.\n");
     if (tudocerto) printf("Não foi violada nenhuma das restrições.\n");
+    return tudocerto;
 }
 
 // Função para desfazer o último comando
