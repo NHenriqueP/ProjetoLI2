@@ -357,6 +357,26 @@ int executarComandov(int L, int C, char **carac) {
     for (i = 0; i < L; i++) {
         for (j = 0; j < C; j++) {
             if (carac[i][j] == '#') {
+                // Verificar vizinho acima
+            if (i > 0 && carac[i - 1][j] == '#') {
+                tudocerto = 0;
+                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' acima.\n", i + 1, j + 1);
+            }
+            // Verificar vizinho abaixo
+            if (i < L - 1 && carac[i + 1][j] == '#') {
+                tudocerto = 0;
+                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' abaixo.\n", i + 1, j + 1);
+            }
+            // Verificar vizinho à esquerda
+            if (j > 0 && carac[i][j - 1] == '#') {
+                tudocerto = 0;
+                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à esquerda.\n", i + 1, j + 1);
+            }
+            // Verificar vizinho à direita
+            if (j < C - 1 && carac[i][j + 1] == '#') {
+                tudocerto = 0;
+                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à direita.\n", i + 1, j + 1);
+            }
                 // Verifica se as letras ao lado de '#' são maiúsculas
                 if (i + 1 < L && isalpha(carac[i + 1][j]) && !isupper(carac[i + 1][j])) {
                     tudocerto = 0;
@@ -411,6 +431,7 @@ int executarComandov(int L, int C, char **carac) {
                     printf("Restrição violada: letra maiúscula na linha %d e coluna %d não tem nenhum caminho ortogonal.\n", i + 1, j + 1);
                 }
             }
+
         }
     }
     // Salvar o estado atual no histórico
