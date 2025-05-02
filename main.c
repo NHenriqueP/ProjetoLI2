@@ -9,35 +9,65 @@ int main() {
     char comando[20];
     char **carac = NULL; // Ponteiro duplo para a matriz
 
-    // Ler dimensões da matriz
-    if (scanf("%d %d", &L, &C) != 2) {
-        printf("Erro ao ler as dimensões da matriz!\n");
+    // Ler dimensões da matriz ou carregar uma matriz
+    printf("Digite 'l' para carregar o jogo ou insira as dimensões da matriz (L C):\n");
+    if (fgets(comando, sizeof(comando), stdin) == NULL) {
+        printf("Erro ao ler o comando!\n");
         return 1;
     }
 
-    // Alocar memória para a matriz
-    carac = (char **)malloc(L * sizeof(char *));
-    if (carac == NULL) {
-        printf("Erro ao alocar memória para a matriz!\n");
-        return 1;
-    }
-    for (int i = 0; i < L; i++) {
-        carac[i] = (char *)malloc((C + 1) * sizeof(char));
-        if (carac[i] == NULL) {
-            printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
+    if (comando[0] == 'l' && comando[1] == '\n') {
+        // Inicializa L e C para evitar uso de valores não definidos
+        L = 0;
+        C = 0;
+
+        // Salvar o estado atual no histórico antes de carregar o novo jogo
+        empilharComando('l', L, C, carac);
+
+        // Liberar a memória da matriz atual antes de carregar um novo jogo
+        if (carac != NULL) {
+            for (int i = 0; i < L; i++) {
+                free(carac[i]);
+            }
+            free(carac);
+        }
+
+        if (carregarJogo("jogo.txt", &L, &C, &carac)) {
+            printf("Jogo carregado com sucesso.\n");
+        } else {
+            printf("Falha ao carregar o jogo.\n");
+            return 1; // Sai do programa se falhar ao carregar o jogo
+        }
+    } else {
+        if (sscanf(comando, "%d %d", &L, &C) != 2) {
+            printf("Erro ao ler as dimensões da matriz!\n");
             return 1;
         }
-    }
 
-    for (int i = 0; i < L; i++) {
-        if (scanf("%s", carac[i]) != 1) {
-            printf("Erro ao ler a linha %d\n", i);
+        // Alocar memória para a matriz
+        carac = (char **)malloc(L * sizeof(char *));
+        if (carac == NULL) {
+            printf("Erro ao alocar memória para a matriz!\n");
             return 1;
         }
-    }
+        for (int i = 0; i < L; i++) {
+            carac[i] = (char *)malloc((C + 1) * sizeof(char));
+            if (carac[i] == NULL) {
+                printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
+                return 1;
+            }
+        }
 
-    // Limpa o buffer antes de usar fgets
-    while (getchar() != '\n');
+        for (int i = 0; i < L; i++) {
+            if (scanf("%s", carac[i]) != 1) {
+                printf("Erro ao ler a linha %d\n", i);
+                return 1;
+            }
+        }
+
+        // Limpa o buffer antes de usar fgets
+        while (getchar() != '\n');
+    }
 
     // Loop principal
     while (1) {
@@ -54,7 +84,6 @@ int main() {
         printf("- A invocar o comando a enquanto o jogo sofrer alterações\n");
         printf("- v para verificar as restrições\n");
         printf("- R para resolver o jogo automaticamente\n");
-
 
         if (fgets(comando, sizeof(comando), stdin) == NULL) {
             printf("Erro ao ler o comando!\n");
