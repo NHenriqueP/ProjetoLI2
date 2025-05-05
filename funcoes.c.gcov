@@ -1,0 +1,571 @@
+        -:    0:Source:funcoes.c
+        -:    0:Graph:programa-main.gcno
+        -:    0:Data:programa-main.gcda
+        -:    0:Runs:4
+        -:    1:#include <stdio.h>
+        -:    2:#include <ctype.h> // Para usar a função toupper
+        -:    3:#include <string.h> // Para usar a função strcmp
+        -:    4:#include <stdlib.h>
+        -:    5:
+        -:    6:// Estrutura para armazenar o histórico de comandos
+        -:    7:typedef struct {
+        -:    8:    char tipoComando;  // Tipo do comando ('r', 'b', 'g', 'l', etc.)
+        -:    9:    char **estadoMatriz; // Estado completo da matriz antes do comando
+        -:   10:    int L, C;          // Dimensões da matriz no momento do comando
+        -:   11:} Historico;
+        -:   12:
+        -:   13:// Pilha para armazenar o histórico
+        -:   14:Historico *pilha = NULL;
+        -:   15:int topo = -1; // Índice do topo da pilha
+        -:   16:
+        -:   17:// Funcao para salvar o estado atual da matriz na pilha
+       25:   18:char **copiarMatriz(int L, int C, char **carac) {
+       25:   19:    char **copia = malloc(L * sizeof(char *));
+      136:   20:    for (int i = 0; i < L; i++) {
+      111:   21:        copia[i] = malloc((C + 1) * sizeof(char));
+      111:   22:        strcpy(copia[i], carac[i]);
+        -:   23:    }
+       25:   24:    return copia;
+        -:   25:}
+        -:   26:
+        6:   27:void liberarMatriz(int L, char **matriz) {
+       36:   28:    for (int i = 0; i < L; i++) {
+       30:   29:        free(matriz[i]);
+        -:   30:    }
+        6:   31:    free(matriz);
+        6:   32:}
+        -:   33:
+       20:   34:void empilharComando(char tipoComando, int L, int C, char **carac) {
+       20:   35:    topo++;
+       20:   36:    pilha = realloc(pilha, (topo + 1) * sizeof(Historico));
+       20:   37:    if (pilha == NULL) {
+    #####:   38:        printf("Erro ao alocar memória para o histórico de comandos!\n");
+    #####:   39:        exit(1);
+        -:   40:    }
+       20:   41:    pilha[topo].tipoComando = tipoComando;
+       20:   42:    pilha[topo].L = L;
+       20:   43:    pilha[topo].C = C;
+       20:   44:    pilha[topo].estadoMatriz = copiarMatriz(L, C, carac);
+       20:   45:}
+        -:   46:
+       24:   47:void printMatriz(int L, int C, char **carac) {
+      123:   48:    for (int i = 0; i < L; i++) {
+      564:   49:        for (int j = 0; j < C && carac[i][j] != '\0'; j++) {
+      465:   50:            printf("%c ", carac[i][j]);
+        -:   51:        }
+       99:   52:        printf("\n");
+        -:   53:    }
+       24:   54:    printf("\n");
+       24:   55:}
+        -:   56:
+        1:   57:void salvarJogo(char *nomeArquivo, int L, int C, char **carac) {
+        1:   58:    FILE *arquivo = fopen(nomeArquivo, "w");
+        1:   59:    if (arquivo == NULL) {
+    #####:   60:        printf("Erro ao abrir o arquivo para salvar o jogo!\n");
+    #####:   61:        return;
+        -:   62:    }
+        -:   63:
+        -:   64:    // Salvar as dimensões da matriz
+        1:   65:    fprintf(arquivo, "%d %d\n", L, C);
+        -:   66:
+        -:   67:    // Salvar o conteúdo da matriz
+        6:   68:    for (int i = 0; i < L; i++) {
+        5:   69:        fprintf(arquivo, "%s\n", carac[i]);
+        -:   70:    }
+        -:   71:    
+        -:   72:    // Salvar o estado atual no histórico
+        1:   73:    empilharComando('g', L, C, carac);
+        -:   74:
+        1:   75:    fclose(arquivo);
+        1:   76:    printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
+        -:   77:}
+        -:   78:
+        2:   79:int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
+        2:   80:    FILE *arquivo = fopen(nomeArquivo, "r");
+        2:   81:    if (arquivo == NULL) {
+    #####:   82:        printf("Erro ao abrir o arquivo para carregar o jogo!\n");
+    #####:   83:        return 0; // Retorna 0 para indicar falha
+        -:   84:    }
+        -:   85:
+        -:   86:    // Ler as dimensões da matriz
+        2:   87:    if (fscanf(arquivo, "%d %d\n", L, C) != 2) {
+    #####:   88:        printf("Erro ao ler as dimensões do jogo no arquivo!\n");
+    #####:   89:        fclose(arquivo);
+    #####:   90:        return 0;
+        -:   91:    }
+        2:   92:    printf("Dimensões lidas: L = %d, C = %d\n", *L, *C);
+        -:   93:
+        -:   94:    // Alocar memória para a matriz
+        2:   95:    *carac = malloc(*L * sizeof(char *));
+        2:   96:    if (*carac == NULL) {
+    #####:   97:        printf("Erro ao alocar memória para a matriz!\n");
+    #####:   98:        fclose(arquivo);
+    #####:   99:        return 0;
+        -:  100:    }
+        -:  101:
+       12:  102:    for (int i = 0; i < *L; i++) {
+       10:  103:        (*carac)[i] = malloc((*C + 1) * sizeof(char));
+       10:  104:        if ((*carac)[i] == NULL) {
+    #####:  105:            printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
+    #####:  106:            fclose(arquivo);
+    #####:  107:            return 0;
+        -:  108:        }
+        -:  109:    }
+        -:  110:
+        -:  111:    // Ler o conteúdo da matriz
+       12:  112:    for (int i = 0; i < *L; i++) {
+       10:  113:        if (fscanf(arquivo, "%s", (*carac)[i]) != 1) {
+    #####:  114:            printf("Erro ao ler a linha %d do jogo no arquivo!\n", i);
+    #####:  115:            fclose(arquivo);
+    #####:  116:            return 0;
+        -:  117:        }
+       10:  118:        printf("Linha %d lida: %s\n", i, (*carac)[i]); // Log de depuração
+        -:  119:    }
+        -:  120:
+        2:  121:    fclose(arquivo);
+        2:  122:    printf("\nJogo carregado com sucesso do arquivo '%s'.\n\n", nomeArquivo);
+        2:  123:    return 1; // Retorna 1 para indicar sucesso
+        -:  124:}
+        -:  125:
+        -:  126:// Função para determinar as coordenadas da matriz a partir de uma entrada no formato "<letra><número>"
+        8:  127:int determinarCoordenadas(char *coordenada, int *x, int *y) {
+        8:  128:    if (strlen(coordenada) < 2) {
+    #####:  129:        printf("Coordenada inválida!\n");
+    #####:  130:        return 0; // Retorna 0 para indicar falha
+        -:  131:    }
+        -:  132:
+        -:  133:    // A primeira parte da coordenada é a letra (linha)
+        8:  134:    char linha = coordenada[0];
+        8:  135:    if (!islower(linha)) { // Verifica se a letra não é minúscula
+    #####:  136:        printf("Coordenada inválida!\n");
+    #####:  137:        return 0;
+        -:  138:    }
+        -:  139:
+        -:  140:    // A segunda parte da coordenada é o número (coluna)
+        8:  141:    int coluna = atoi(&coordenada[1]); // Converte a parte numérica para inteiro
+        8:  142:    if (coluna <= 0) {
+    #####:  143:        printf("Coordenada inválida!\n");
+    #####:  144:        return 0;
+        -:  145:    }
+        -:  146:
+        -:  147:    // Converte a letra para o índice da linha (0-indexado)
+        8:  148:    *x = linha - 'a';
+        -:  149:
+        -:  150:    // Converte o número para o índice da coluna (0-indexado)
+        8:  151:    *y = coluna - 1;
+        -:  152:
+        8:  153:    return 1; // Retorna 1 para indicar sucesso
+        -:  154:}
+        -:  155:
+        6:  156:void executarComandoR(int L, int C, char **carac, char *comando) {
+        -:  157:    char coordenada[10];
+        6:  158:    if (sscanf(comando, "r %s", coordenada) != 1) {
+    #####:  159:        printf("Comando inválido!\n");
+    #####:  160:        return;
+        -:  161:    }
+        -:  162:
+        -:  163:    int x, y;
+        6:  164:    if (!determinarCoordenadas(coordenada, &x, &y)) {
+    #####:  165:        printf("Erro ao determinar as coordenadas!\n");
+    #####:  166:        return;
+        -:  167:    }
+        -:  168:
+        6:  169:    if (x < 0 || x >= L || y < 0 || y >= C) {
+    #####:  170:        printf("Coordenadas fora dos limites da matriz!\n");
+    #####:  171:        return;
+        -:  172:    }
+        -:  173:
+        -:  174:    // Salvar o estado atual no histórico
+        6:  175:    empilharComando('r', L, C, carac);
+        -:  176:
+        -:  177:    // Modificar a matriz
+        6:  178:    carac[x][y] = '#';
+        6:  179:    printf("Posição (%c, %d) alterada para '#'.\n", 'a' + x, y + 1);
+        -:  180:}
+        -:  181:
+        2:  182:void executarComandoB(int L, int C, char **carac, char *comando) {
+        -:  183:    char coordenada[10];
+        2:  184:    if (sscanf(comando, "b %s", coordenada) != 1) {
+    #####:  185:        printf("Comando inválido!\n");
+    #####:  186:        return;
+        -:  187:    }
+        -:  188:
+        -:  189:    int x, y;
+        2:  190:    if (!determinarCoordenadas(coordenada, &x, &y)) {
+    #####:  191:        printf("Erro ao determinar as coordenadas!\n");
+    #####:  192:        return;
+        -:  193:    }
+        -:  194:
+        2:  195:    if (x < 0 || x >= L || y < 0 || y >= C) {
+    #####:  196:        printf("Coordenadas fora dos limites da matriz!\n");
+    #####:  197:        return;
+        -:  198:    }
+        -:  199:
+        -:  200:    // Salvar o estado atual no histórico
+        2:  201:    empilharComando('b', L, C, carac);
+        -:  202:
+        -:  203:    // Modificar a matriz
+        2:  204:    carac[x][y] = toupper(carac[x][y]);
+        2:  205:    printf("Posição (%c, %d) alterada para '%c'.\n", 'a' + x, y + 1, carac[x][y]);
+        -:  206:}
+        -:  207:
+      159:  208:int temLetrasOrtogonais(int i, int j, char **carac, int L, int C) {
+      159:  209:    int resultado = 0;
+        -:  210:    // Verificar se a posição atual está dentro dos limites e não é riscada
+      159:  211:    if (i < 0 || i >= L || j < 0 || j >= C || carac[i][j] == '#') return 0;
+        -:  212:
+        -:  213:    // Verificar as posições ortogonais (cima, baixo, esquerda, direita)
+       83:  214:    if (i > 0 && carac[i - 1][j] != '#' && isalpha(carac[i - 1][j])) resultado = 1; // Cima
+       83:  215:    if (i < L - 1 && carac[i + 1][j] != '#' && isalpha(carac[i + 1][j])) resultado = 1; // Baixo
+       83:  216:    if (j > 0 && carac[i][j - 1] != '#' && isalpha(carac[i][j - 1])) resultado = 1; // Esquerda
+       83:  217:    if (j < C - 1 && carac[i][j + 1] != '#' && isalpha(carac[i][j + 1])) resultado = 1; // Direita
+        -:  218:
+       83:  219:    return resultado; // Não há letras nas posições ortogonais
+        -:  220:}
+        -:  221:
+       86:  222:int isoladoOrtogonais(int i, int j, int L, int C, char **carac) {
+        -:  223:    // Verificar se a posição está isolada (nenhuma direção tem letras válidas)
+      131:  224:    if (!temLetrasOrtogonais(i - 1, j, carac, L, C) && // Cima
+       66:  225:        !temLetrasOrtogonais(i + 1, j, carac, L, C) && // Baixo
+       28:  226:        !temLetrasOrtogonais(i, j - 1, carac, L, C) && // Esquerda
+        7:  227:        !temLetrasOrtogonais(i, j + 1, carac, L, C)) { // Direita
+        3:  228:        return 1; // Está isolado
+        -:  229:    }
+       83:  230:    return 0; // Não está isolado
+        -:  231:}
+        -:  232:
+       26:  233:int vizinhaFicaIsolada(int i, int j, int L, int C, char **carac) {
+        -:  234:    // CIMA
+       26:  235:    if (i > 0 && isalpha(carac[i - 1][j]) && carac[i - 1][j] != '#') {
+       21:  236:        char original = carac[i][j];
+       21:  237:        carac[i][j] = '#';
+       21:  238:        int isolada = isoladoOrtogonais(i - 1, j, L, C, carac);
+       21:  239:        carac[i][j] = original;
+      21*:  240:        if (isolada) return 1;
+        -:  241:    }
+        -:  242:
+        -:  243:    // BAIXO
+       26:  244:    if (i < L - 1 && isalpha(carac[i + 1][j]) && carac[i + 1][j] != '#') {
+       21:  245:        char original = carac[i][j];
+       21:  246:        carac[i][j] = '#';
+       21:  247:        int isolada = isoladoOrtogonais(i + 1, j, L, C, carac);
+       21:  248:        carac[i][j] = original;
+       21:  249:        if (isolada) return 1;
+        -:  250:    }
+        -:  251:
+        -:  252:    // ESQUERDA
+       24:  253:    if (j > 0 && isalpha(carac[i][j - 1]) && carac[i][j - 1] != '#') {
+       24:  254:        char original = carac[i][j];
+       24:  255:        carac[i][j] = '#';
+       24:  256:        int isolada = isoladoOrtogonais(i, j - 1, L, C, carac);
+       24:  257:        carac[i][j] = original;
+      24*:  258:        if (isolada) return 1;
+        -:  259:    }
+        -:  260:    
+        -:  261:    // DIREITA
+       24:  262:    if (j < C - 1 && isalpha(carac[i][j + 1]) && carac[i][j + 1] != '#') {
+       20:  263:        char original = carac[i][j];
+       20:  264:        carac[i][j] = '#';
+       20:  265:        int isolada = isoladoOrtogonais(i, j + 1, L, C, carac);
+       20:  266:        carac[i][j] = original;
+       20:  267:        if (isolada) return 1;
+        -:  268:    }
+        -:  269:
+       23:  270:    return 0; // Nenhuma vizinha ficaria isolada
+        -:  271:}
+        -:  272:
+        7:  273:void executarComandoa(int L, int C, char **carac) {
+        -:  274:    int k, i, j;
+        -:  275:
+        -:  276:    // Salvar o estado atual no histórico
+        7:  277:    empilharComando('a', L, C, carac);
+        -:  278:
+        -:  279:    // 1. Riscar todas as letras iguais a uma letra branca na mesma linha e/ou coluna
+       42:  280:    for (i = 0; i < L; i++) {
+      210:  281:        for (j = 0; j < C; j++) {
+      175:  282:            if (isupper(carac[i][j])) {
+       75:  283:                char z = tolower(carac[i][j]);
+      450:  284:                for (k = 0; k < L; k++) {
+      375:  285:                    if (carac[k][j] == z) {
+        9:  286:                        carac[k][j] = '#';
+        -:  287:                    }
+        -:  288:                }
+      450:  289:                for (k = 0; k < C; k++) {
+      375:  290:                    if (carac[i][k] == z) {
+        1:  291:                        carac[i][k] = '#';
+        -:  292:                    }
+        -:  293:                }
+        -:  294:            }
+        -:  295:        }
+        -:  296:    }
+        -:  297:
+        -:  298:    // 2. Pintar de branco todas as casas vizinhas de uma casa riscada
+       42:  299:    for (i = 0; i < L; i++) {
+      210:  300:        for (j = 0; j < C; j++) {
+      175:  301:            if (carac[i][j] == '#') {
+       53:  302:                if (i + 1 < L && islower(carac[i + 1][j])) carac[i + 1][j] = toupper(carac[i + 1][j]);
+       53:  303:                if (i - 1 >= 0 && islower(carac[i - 1][j])) carac[i - 1][j] = toupper(carac[i - 1][j]);
+       53:  304:                if (j + 1 < C && islower(carac[i][j + 1])) carac[i][j + 1] = toupper(carac[i][j + 1]);
+       53:  305:                if (j - 1 >= 0 && islower(carac[i][j - 1])) carac[i][j - 1] = toupper(carac[i][j - 1]);
+        -:  306:            }
+        -:  307:        }
+        -:  308:    }
+        -:  309:
+       42:  310:    for (i = 0; i < L; i++) {
+      210:  311:        for (j = 0; j < C; j++) {
+      175:  312:            if (carac[i][j] != '#' && islower(carac[i][j])) {
+       26:  313:                if (vizinhaFicaIsolada(i, j, L, C, carac)) {
+        3:  314:                    carac[i][j] = toupper(carac[i][j]);
+        -:  315:                }
+        -:  316:            }
+        -:  317:        }
+        -:  318:    }
+        7:  319:}
+        -:  320:
+        2:  321:void executarComandoA(int L, int C, char **carac) {
+        2:  322:    int mudou = 1; // Inicialmente, assumimos que haverá mudanças
+        -:  323:
+        -:  324:    // Salvar o estado inicial no histórico
+        2:  325:    empilharComando('A', L, C, carac);
+        -:  326:
+        -:  327:    // Enquanto houver mudanças no tabuleiro
+        7:  328:    while (mudou) {
+        5:  329:        mudou = 0; // Resetar a variável de controle
+        -:  330:
+        -:  331:        // Copiar o estado atual da matriz para comparação
+        5:  332:        char **estadoAnterior = copiarMatriz(L, C, carac);
+        -:  333:
+        -:  334:        // Executar o comando `a`
+        5:  335:        executarComandoa(L, C, carac);
+        -:  336:
+        -:  337:        // Verificar se houve mudanças no tabuleiro
+       18:  338:        for (int i = 0; i < L; i++) {
+       16:  339:            if (strcmp(estadoAnterior[i], carac[i]) != 0) {
+        3:  340:                mudou = 1; // Detectamos mudanças
+        3:  341:                break;
+        -:  342:            }
+        -:  343:        }
+        -:  344:
+        -:  345:        // Liberar a memória da cópia do estado anterior
+        5:  346:        liberarMatriz(L, estadoAnterior);
+        -:  347:    }
+        -:  348:
+        2:  349:    printf("Comando 'A' executado: o tabuleiro foi atualizado até estabilizar.\n");
+        2:  350:}
+        -:  351:
+        3:  352:int executarComandov(int L, int C, char **carac) {
+        -:  353:    int i, j;
+        3:  354:    int tudocerto = 1;
+        3:  355:    int iguais = 0;
+        -:  356:
+       15:  357:    for (i = 0; i < L; i++) {
+       68:  358:        for (j = 0; j < C; j++) {
+       56:  359:            if (carac[i][j] == '#') {
+        -:  360:                // Verificar vizinho acima
+       17:  361:            if (i > 0 && carac[i - 1][j] == '#') {
+        3:  362:                tudocerto = 0;
+        3:  363:                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' acima.\n", i + 1, j + 1);
+        -:  364:            }
+        -:  365:            // Verificar vizinho abaixo
+       17:  366:            if (i < L - 1 && carac[i + 1][j] == '#') {
+        3:  367:                tudocerto = 0;
+        3:  368:                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' abaixo.\n", i + 1, j + 1);
+        -:  369:            }
+        -:  370:            // Verificar vizinho à esquerda
+       17:  371:            if (j > 0 && carac[i][j - 1] == '#') {
+        1:  372:                tudocerto = 0;
+        1:  373:                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à esquerda.\n", i + 1, j + 1);
+        -:  374:            }
+        -:  375:            // Verificar vizinho à direita
+       17:  376:            if (j < C - 1 && carac[i][j + 1] == '#') {
+        1:  377:                tudocerto = 0;
+        1:  378:                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à direita.\n", i + 1, j + 1);
+        -:  379:            }
+        -:  380:                // Verifica se as letras ao lado de '#' são maiúsculas
+       17:  381:                if (i + 1 < L && isalpha(carac[i + 1][j]) && !isupper(carac[i + 1][j])) {
+        3:  382:                    tudocerto = 0;
+        3:  383:                    printf("Restrição violada na linha %d e coluna %d (abaixo).\n", i + 2, j + 1);
+        -:  384:                }
+       17:  385:                if (i - 1 >= 0 && isalpha(carac[i - 1][j]) && !isupper(carac[i - 1][j])) {
+        1:  386:                    tudocerto = 0;
+        1:  387:                    printf("Restrição violada na linha %d e coluna %d (acima).\n", i, j + 1);
+        -:  388:                }
+       17:  389:                if (j + 1 < C && isalpha(carac[i][j + 1]) && !isupper(carac[i][j + 1])) {
+        1:  390:                    tudocerto = 0;
+        1:  391:                    printf("Restrição violada na linha %d e coluna %d (à direita).\n", i + 1, j + 2);
+        -:  392:                }
+       17:  393:                if (j - 1 >= 0 && isalpha(carac[i][j - 1]) && !isupper(carac[i][j - 1])) {
+        1:  394:                    tudocerto = 0;
+        1:  395:                    printf("Restrição violada na linha %d e coluna %d (à esquerda).\n", i + 1, j);
+        -:  396:                }
+        -:  397:            }
+        -:  398:
+        -:  399:            // Verifica se existem letras iguais na mesma linha ou coluna
+       56:  400:            if (isupper(carac[i][j])) {
+       28:  401:                char letra = carac[i][j];
+        -:  402:
+        -:  403:                // Verifica na mesma linha
+      168:  404:                for (int k = 0; k < C; k++) {
+      140:  405:                    if (k != j && carac[i][k] == letra) {
+        2:  406:                        tudocerto = 0;
+        2:  407:                        iguais = 1;
+        -:  408:                    }
+        -:  409:                }
+        -:  410:
+        -:  411:                // Verifica na mesma coluna
+      168:  412:                for (int k = 0; k < L; k++) {
+      140:  413:                    if (k != i && carac[k][j] == letra) {
+        4:  414:                        tudocerto = 0;
+        4:  415:                        iguais = 1;
+        -:  416:                    }
+        -:  417:                }
+        -:  418:            }
+        -:  419:
+        -:  420:            // Verifica se ao lado de uma letra maiúscula existe pelo menos uma outra maiúscula
+       56:  421:            if (isupper(carac[i][j])) {
+       28:  422:                int temMaiuscula = 0;
+        -:  423:
+       28:  424:                if (i + 1 < L && isalpha(carac[i + 1][j])) temMaiuscula = 1; // Abaixo
+       28:  425:                if (i - 1 >= 0 && isalpha(carac[i - 1][j])) temMaiuscula = 1; // Acima
+       28:  426:                if (j + 1 < C && isalpha(carac[i][j + 1])) temMaiuscula = 1; // Direita
+       28:  427:                if (j - 1 >= 0 && isalpha(carac[i][j - 1])) temMaiuscula = 1; // Esquerda
+        -:  428:
+       28:  429:                if (!temMaiuscula) {
+    #####:  430:                    tudocerto = 0;
+    #####:  431:                    printf("Restrição violada: letra maiúscula na linha %d e coluna %d não tem nenhum caminho ortogonal.\n", i + 1, j + 1);
+        -:  432:                }
+        -:  433:            }
+        -:  434:
+        -:  435:        }
+        -:  436:    }
+        -:  437:    // Salvar o estado atual no histórico
+        -:  438:   // empilharComando('v', L, C, carac); deixei em comentario pq assim da para fazer o comando d dps de fazer o comando v
+        3:  439:    if (iguais) printf("Existem letras repetidas na mesma linha ou coluna.\n");
+       3*:  440:    if (tudocerto) printf("Não foi violada nenhuma das restrições.\n");
+        3:  441:    return tudocerto;
+        -:  442:}
+        -:  443:
+        -:  444:// Função para desfazer o último comando
+        1:  445:void desfazerComando(char ***carac, int *L, int *C) {
+        1:  446:    if (topo == -1) {
+    #####:  447:        printf("Nenhum comando para desfazer!\n");
+    #####:  448:        return;
+        -:  449:    }
+        -:  450:
+        -:  451:    // Recuperar o último comando
+        1:  452:    Historico ultimo = pilha[topo];
+        -:  453:
+        -:  454:    // Verifica se o comando é 'v'
+        1:  455:    if (ultimo.tipoComando == 'v') {
+    #####:  456:        printf("O comando 'v' não pode ser desfeito!\n");
+    #####:  457:        return;
+        -:  458:    }
+        -:  459:
+        1:  460:    topo--;
+        -:  461:
+        -:  462:    // Liberar a matriz atual
+        1:  463:    liberarMatriz(*L, *carac);
+        -:  464:
+        -:  465:    // Restaurar o estado anterior da matriz
+        1:  466:    *carac = ultimo.estadoMatriz;
+        1:  467:    *L = ultimo.L;
+        1:  468:    *C = ultimo.C;
+        -:  469:
+        1:  470:    printf("Comando '%c' desfeito. Estado anterior restaurado.\n", ultimo.tipoComando);
+        -:  471:}
+        -:  472:
+        2:  473:void resolverJogo(int L, int C, char **carac) {
+        -:  474:    int mudou; // Variável para verificar se houve mudanças no tabuleiro
+        -:  475:
+        -:  476:    do {
+        4:  477:        mudou = 0;
+        -:  478:
+        -:  479:        // 1. Pintar de branco uma única réplica de cada símbolo em cada linha e coluna
+       15:  480:        for (int i = 0; i < L; i++) {
+       54:  481:            for (int j = 0; j < C; j++) {
+       43:  482:                if (islower(carac[i][j])) { // Se for uma letra minúscula
+        5:  483:                    char simbolo = carac[i][j];
+        5:  484:                    int unico = 1;
+        -:  485:
+        -:  486:                    // Verificar se o símbolo é único na linha
+       17:  487:                    for (int k = 0; k < C; k++) {
+       14:  488:                        if (k != j && carac[i][k] == simbolo) {
+        2:  489:                            unico = 0;
+        2:  490:                            break;
+        -:  491:                        }
+        -:  492:                    }
+        -:  493:
+        -:  494:                    // Verificar se o símbolo é único na coluna
+       12:  495:                    for (int k = 0; k < L; k++) {
+        9:  496:                        if (k != i && carac[k][j] == simbolo) {
+        2:  497:                            unico = 0;
+        2:  498:                            break;
+        -:  499:                        }
+        -:  500:                    }
+        -:  501:
+        -:  502:                    // Se for único, pintar de branco (maiúscula)
+        5:  503:                    if (unico) {
+        2:  504:                        carac[i][j] = toupper(carac[i][j]);
+        2:  505:                        mudou = 1;
+        -:  506:                    }
+        -:  507:                }
+        -:  508:            }
+        -:  509:        }
+        -:  510:
+        -:  511:        // 2. Riscar todas as outras réplicas do mesmo símbolo
+       15:  512:        for (int i = 0; i < L; i++) {
+       54:  513:            for (int j = 0; j < C; j++) {
+       43:  514:                if (isupper(carac[i][j])) { // Se for uma letra maiúscula
+       25:  515:                    char simbolo = tolower(carac[i][j]); // Obter o símbolo original em minúscula
+        -:  516:
+        -:  517:                    // Riscar todas as réplicas na mesma linha
+      132:  518:                    for (int k = 0; k < C; k++) {
+      107:  519:                        if (carac[i][k] == simbolo) { // Se for uma réplica
+    #####:  520:                            carac[i][k] = '#'; // Riscar
+    #####:  521:                            mudou = 1;
+        -:  522:                        }
+        -:  523:                    }
+        -:  524:
+        -:  525:                    // Riscar todas as réplicas na mesma coluna
+      123:  526:                    for (int k = 0; k < L; k++) {
+       98:  527:                        if (carac[k][j] == simbolo) { // Se for uma réplica
+    #####:  528:                            carac[k][j] = '#'; // Riscar
+    #####:  529:                            mudou = 1;
+        -:  530:                        }
+        -:  531:                    }
+        -:  532:                }
+        -:  533:            }
+        -:  534:        }
+        -:  535:
+        -:  536:        // 3. Pintar de branco todas as casas vizinhas ortogonais de uma casa riscada
+       15:  537:        for (int i = 0; i < L; i++) {
+       54:  538:            for (int j = 0; j < C; j++) {
+       43:  539:                if (carac[i][j] == '#') { // Se for uma casa riscada
+        -:  540:                    // Verificar vizinho acima
+       15:  541:                    if (i > 0 && islower(carac[i - 1][j])) {
+    #####:  542:                        carac[i - 1][j] = toupper(carac[i - 1][j]);
+    #####:  543:                        mudou = 1;
+        -:  544:                    }
+        -:  545:                    // Verificar vizinho abaixo
+       15:  546:                    if (i < L - 1 && islower(carac[i + 1][j])) {
+        1:  547:                        carac[i + 1][j] = toupper(carac[i + 1][j]);
+        1:  548:                        mudou = 1;
+        -:  549:                    }
+        -:  550:                    // Verificar vizinho à esquerda
+       15:  551:                    if (j > 0 && islower(carac[i][j - 1])) {
+    #####:  552:                        carac[i][j - 1] = toupper(carac[i][j - 1]);
+    #####:  553:                        mudou = 1;
+        -:  554:                    }
+        -:  555:                    // Verificar vizinho à direita
+       15:  556:                    if (j < C - 1 && islower(carac[i][j + 1])) {
+        1:  557:                        carac[i][j + 1] = toupper(carac[i][j + 1]);
+        1:  558:                        mudou = 1;
+        -:  559:                    }
+        -:  560:                }
+        -:  561:            }
+        -:  562:        }
+        -:  563:
+        4:  564:    } while (mudou); // Repete enquanto houver mudanças no tabuleiro
+        -:  565:
+        2:  566:    printf("Jogo resolvido automaticamente.\n");
+        2:  567:}
