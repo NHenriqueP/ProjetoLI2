@@ -470,16 +470,66 @@ void desfazerComando(char ***carac, int *L, int *C) {
     printf("Comando '%c' desfeito. Estado anterior restaurado.\n", ultimo.tipoComando);
 }
 
-void resolverJogo(int L, int C, char **carac) {
-    int mudou; // Variável para verificar se houve mudanças no tabuleiro
+void procurarPadrãoABA(int L, int C, char **carac) {
+    for (int i = 0; i < L; i++) {
+        for (int j = 1; j < C - 1; j++) {
+            // Verificar padrão ABA na linha
+            if (carac[i][j - 1] == carac[i][j + 1] && islower(carac[i][j - 1]) && carac[i][j] == '.') {
+                carac[i][j] = toupper(carac[i][j - 1]);
+            }
+        }
+    }
 
-    do {
+    for (int j = 0; j < C; j++) {
+        for (int i = 1; i < L - 1; i++) {
+            // Verificar padrão ABA na coluna
+            if (carac[i - 1][j] == carac[i + 1][j] && islower(carac[i - 1][j]) && carac[i][j] == '.') {
+                carac[i][j] = toupper(carac[i - 1][j]);
+            }
+        }
+    }
+}
+
+void procurarPadrãoAAA(int L, int C, char **carac) {
+    for (int i = 0; i < L; i++) {
+        for (int j = 2; j < C; j++) {
+            // Verificar padrão AA.A na linha
+            if (carac[i][j - 2] == carac[i][j - 1] && islower(carac[i][j - 2]) && carac[i][j] == '.') {
+                carac[i][j] = '#';
+            }
+        }
+    }
+
+    for (int j = 0; j < C; j++) {
+        for (int i = 2; i < L; i++) {
+            // Verificar padrão AA.A na coluna
+            if (carac[i - 2][j] == carac[i - 1][j] && islower(carac[i - 2][j]) && carac[i][j] == '.') {
+                carac[i][j] = '#';            
+            }
+        }
+    }
+}
+
+void resolverJogo(int L, int C, char **carac) {
+    int mudou = 1;
+
+    // Salvar o estado inicial no histórico
+    empilharComando('R', L, C, carac);
+
+    while (mudou) {
         mudou = 0;
 
-        // 1. Pintar de branco uma única réplica de cada símbolo em cada linha e coluna
+        // 1. Procurar padrões ABA e AA.A
+        procurarPadrãoABA(L, C, carac);
+        procurarPadrãoAAA(L, C, carac);
+
+        // 2. Usar o comando A para estabilizar o tabuleiro
+        executarComandoA(L, C, carac);
+
+        // 3. Procurar letras repetidas em linhas ou colunas
         for (int i = 0; i < L; i++) {
             for (int j = 0; j < C; j++) {
-                if (islower(carac[i][j])) { // Se for uma letra minúscula
+                if (islower(carac[i][j])) {
                     char simbolo = carac[i][j];
                     int unico = 1;
 
@@ -499,69 +549,50 @@ void resolverJogo(int L, int C, char **carac) {
                         }
                     }
 
-                    // Se for único, pintar de branco (maiúscula)
+                    // Se for único, pintar de branco
                     if (unico) {
                         carac[i][j] = toupper(carac[i][j]);
                         mudou = 1;
-                    }
-                }
-            }
-        }
 
-        // 2. Riscar todas as outras réplicas do mesmo símbolo
-        for (int i = 0; i < L; i++) {
-            for (int j = 0; j < C; j++) {
-                if (isupper(carac[i][j])) { // Se for uma letra maiúscula
-                    char simbolo = tolower(carac[i][j]); // Obter o símbolo original em minúscula
+                        // Usar o comando A após pintar
+                        executarComandoA(L, C, carac);
 
-                    // Riscar todas as réplicas na mesma linha
-                    for (int k = 0; k < C; k++) {
-                        if (carac[i][k] == simbolo) { // Se for uma réplica
-                            carac[i][k] = '#'; // Riscar
-                            mudou = 1;
+                        // Verificar se há contradições
+                        if (!executarComandov(L, C, carac)) {
+                            printf("Contradição encontrada ao pintar. Voltando atrás...\n");
+                            desfazerComando(&carac, &L, &C);
+                            return;
+                        }
+                    } else {
+                        // Se não for único, tentar riscar
+                        carac[i][j] = '#';
+                        mudou = 1;
+
+                        // Usar o comando A após riscar
+                        executarComandoA(L, C, carac);
+
+                        // Verificar se há contradições
+                        if (!executarComandov(L, C, carac)) {
+                            printf("Contradição encontrada ao riscar. Voltando atrás...\n");
+                            desfazerComando(&carac, &L, &C);
+                            return;
                         }
                     }
-
-                    // Riscar todas as réplicas na mesma coluna
-                    for (int k = 0; k < L; k++) {
-                        if (carac[k][j] == simbolo) { // Se for uma réplica
-                            carac[k][j] = '#'; // Riscar
-                            mudou = 1;
-                        }
-                    }
                 }
             }
         }
 
-        // 3. Pintar de branco todas as casas vizinhas ortogonais de uma casa riscada
+        // Verificar se ainda há mudanças possíveis
         for (int i = 0; i < L; i++) {
             for (int j = 0; j < C; j++) {
-                if (carac[i][j] == '#') { // Se for uma casa riscada
-                    // Verificar vizinho acima
-                    if (i > 0 && islower(carac[i - 1][j])) {
-                        carac[i - 1][j] = toupper(carac[i - 1][j]);
-                        mudou = 1;
-                    }
-                    // Verificar vizinho abaixo
-                    if (i < L - 1 && islower(carac[i + 1][j])) {
-                        carac[i + 1][j] = toupper(carac[i + 1][j]);
-                        mudou = 1;
-                    }
-                    // Verificar vizinho à esquerda
-                    if (j > 0 && islower(carac[i][j - 1])) {
-                        carac[i][j - 1] = toupper(carac[i][j - 1]);
-                        mudou = 1;
-                    }
-                    // Verificar vizinho à direita
-                    if (j < C - 1 && islower(carac[i][j + 1])) {
-                        carac[i][j + 1] = toupper(carac[i][j + 1]);
-                        mudou = 1;
-                    }
+                if (carac[i][j] == '.') {
+                    mudou = 1;
+                    break;
                 }
             }
+            if (mudou) break;
         }
-
-    } while (mudou); // Repete enquanto houver mudanças no tabuleiro
+    }
 
     printf("Jogo resolvido automaticamente.\n");
 }
