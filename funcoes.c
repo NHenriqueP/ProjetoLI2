@@ -318,6 +318,52 @@ void executarComandoa(int L, int C, char **carac) {
     }
 }
 
+void executarComandoasem(int L, int C, char **carac) {
+    int k, i, j;
+
+    // 1. Riscar todas as letras iguais a uma letra branca na mesma linha e/ou coluna
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (isupper(carac[i][j])) {
+                char z = tolower(carac[i][j]);
+                for (k = 0; k < L; k++) {
+                    if (carac[k][j] == z) {
+                        carac[k][j] = '#';
+                    }
+                }
+                for (k = 0; k < C; k++) {
+                    if (carac[i][k] == z) {
+                        carac[i][k] = '#';
+                    }
+                }
+            }
+        }
+    }
+
+    // 2. Pintar de branco todas as casas vizinhas de uma casa riscada
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (carac[i][j] == '#') {
+                if (i + 1 < L && islower(carac[i + 1][j])) carac[i + 1][j] = toupper(carac[i + 1][j]);
+                if (i - 1 >= 0 && islower(carac[i - 1][j])) carac[i - 1][j] = toupper(carac[i - 1][j]);
+                if (j + 1 < C && islower(carac[i][j + 1])) carac[i][j + 1] = toupper(carac[i][j + 1]);
+                if (j - 1 >= 0 && islower(carac[i][j - 1])) carac[i][j - 1] = toupper(carac[i][j - 1]);
+            }
+        }
+    }
+
+    for (i = 0; i < L; i++) {
+        for (j = 0; j < C; j++) {
+            if (carac[i][j] != '#' && islower(carac[i][j])) {
+                if (vizinhaFicaIsolada(i, j, L, C, carac)) {
+                    carac[i][j] = toupper(carac[i][j]);
+                }
+            }
+        }
+    }
+}
+
+
 void executarComandoA(int L, int C, char **carac) {
     int mudou = 1; // Inicialmente, assumimos que haverá mudanças
 
@@ -332,7 +378,7 @@ void executarComandoA(int L, int C, char **carac) {
         char **estadoAnterior = copiarMatriz(L, C, carac);
 
         // Executar o comando `a`
-        executarComandoa(L, C, carac);
+        executarComandoasem(L, C, carac);
 
         // Verificar se houve mudanças no tabuleiro
         for (int i = 0; i < L; i++) {
@@ -510,6 +556,35 @@ void procurarPadrãoAAA(int L, int C, char **carac) {
     }
 }
 
+void executarComandoAsem(int L, int C, char **carac) {
+    int mudou = 1; // Inicialmente, assumimos que haverá mudanças
+
+
+    // Enquanto houver mudanças no tabuleiro
+    while (mudou) {
+        mudou = 0; // Resetar a variável de controle
+
+        // Copiar o estado atual da matriz para comparação
+        char **estadoAnterior = copiarMatriz(L, C, carac);
+
+        // Executar o comando `a`
+        executarComandoasem(L, C, carac);
+
+        // Verificar se houve mudanças no tabuleiro
+        for (int i = 0; i < L; i++) {
+            if (strcmp(estadoAnterior[i], carac[i]) != 0) {
+                mudou = 1; // Detectamos mudanças
+                break;
+            }
+        }
+
+        // Liberar a memória da cópia do estado anterior
+        liberarMatriz(L, estadoAnterior);
+    }
+
+}
+
+
 void resolverJogo(int L, int C, char **carac) {
     int mudou = 1;
 
@@ -524,7 +599,7 @@ void resolverJogo(int L, int C, char **carac) {
         procurarPadrãoAAA(L, C, carac);
 
         // 2. Usar o comando A para estabilizar o tabuleiro
-        executarComandoA(L, C, carac);
+        executarComandoAsem(L, C, carac);
 
         // 3. Procurar letras repetidas em linhas ou colunas
         for (int i = 0; i < L; i++) {
@@ -555,7 +630,7 @@ void resolverJogo(int L, int C, char **carac) {
                         mudou = 1;
 
                         // Usar o comando A após pintar
-                        executarComandoA(L, C, carac);
+                        executarComandoAsem(L, C, carac);
 
                         // Verificar se há contradições
                         if (!executarComandov(L, C, carac)) {
@@ -569,7 +644,7 @@ void resolverJogo(int L, int C, char **carac) {
                         mudou = 1;
 
                         // Usar o comando A após riscar
-                        executarComandoA(L, C, carac);
+                        executarComandoAsem(L, C, carac);
 
                         // Verificar se há contradições
                         if (!executarComandov(L, C, carac)) {
