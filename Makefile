@@ -12,3 +12,10 @@ tudo:
 	make clean
 	make jogo
 	./jogo
+
+
+#gcov programa-main
+#open main.c.gcov - ve as linhas nao executadas
+
+cobertura:
+	gcc -fprofile-arcs -ftest-coverage -o programa main.c
