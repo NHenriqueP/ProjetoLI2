@@ -4,7 +4,6 @@
 #include <stdlib.h>
 
 int main() {
-    // Modo normal
     int L, C;
     char comando[20];
     char **carac = NULL; // Ponteiro duplo para a matriz
@@ -34,6 +33,9 @@ int main() {
 
         if (carregarJogo("jogo.txt", &L, &C, &carac)) {
             printf("Jogo carregado com sucesso.\n");
+
+            // Salvar a matriz carregada no ficheiro res.txt
+            salvarJogo("res.txt", L, C, carac);
         } else {
             printf("Falha ao carregar o jogo.\n");
             return 1; // Sai do programa se falhar ao carregar o jogo
@@ -67,6 +69,9 @@ int main() {
 
         // Limpa o buffer antes de usar fgets
         while (getchar() != '\n');
+
+        // Salvar a matriz introduzida no ficheiro res.txt
+        salvarJogo("res.txt", L, C, carac);
     }
 
     // Loop principal
@@ -115,6 +120,9 @@ int main() {
 
             if (carregarJogo("jogo.txt", &L, &C, &carac)) {
                 printf("Jogo carregado com sucesso.\n");
+
+                // Salvar a matriz carregada no ficheiro res.txt
+                salvarJogo("res.txt", L, C, carac);
             } else {
                 printf("Falha ao carregar o jogo.\n");
             }
@@ -154,10 +162,18 @@ int main() {
         // Verifica se o comando é "R" para resolver o jogo automaticamente
         if (comando[0] == 'R' && comando[1] == '\n') {
             resolverJogo(L, C, carac);
+
+        // Após resolver o jogo, carregar a matriz de res.txt
+        if (carregarJogo("res.txt", &L, &C, &carac)) {
+            printf("Matriz resolvida carregada do ficheiro 'res.txt':\n");
+            printMatriz(L, C, carac); // Imprime a matriz resolvida
+        } else {
+            printf("Erro ao carregar a matriz resolvida do ficheiro 'res.txt'.\n");
+        }
             continue;
         }
 
-        if (comando[0]== 'A' && comando[1] == '\n') {
+        if (comando[0] == 'A' && comando[1] == '\n') {
             executarComandoA(L, C, carac);
             continue;
         }

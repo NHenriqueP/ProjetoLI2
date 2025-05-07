@@ -3,6 +3,7 @@ jogo:
 
 clean: 
 	rm jogo
+	rm res.txt
 	
 testar:
 	gcc testes.c -o testes -lcunit -Wall -Wextra -pedantic -g

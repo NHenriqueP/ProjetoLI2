@@ -584,7 +584,6 @@ void executarComandoAsem(int L, int C, char **carac) {
 
 }
 
-
 void resolverJogo(int L, int C, char **carac) {
     // Carregar a matriz do ficheiro res.txt
     if (!carregarJogo("res.txt", &L, &C, &carac)) {
