@@ -10,19 +10,11 @@ typedef struct {
     int L, C;          // Dimensões da matriz no momento do comando
 } Historico;
 
-// Pilha para armazenar o histórico
-Historico *pilha = NULL;
-int topo = -1; // Índice do topo da pilha
-
-// Funcao para salvar o estado atual da matriz na pilha
-char **copiarMatriz(int L, int C, char **carac) {
-    char **copia = malloc(L * sizeof(char *));
-    for (int i = 0; i < L; i++) {
-        copia[i] = malloc((C + 1) * sizeof(char));
-        strcpy(copia[i], carac[i]);
-    }
-    return copia;
-}
+// Estrutura para encapsular a pilha de histórico
+typedef struct {
+    Historico *pilha;
+    int topo;
+} HistoricoPilha;
 
 void liberarMatriz(int L, char **matriz) {
     if (matriz == NULL) return;
@@ -35,17 +27,66 @@ void liberarMatriz(int L, char **matriz) {
     free(matriz);
 }
 
-void empilharComando(char tipoComando, int L, int C, char **carac) {
-    topo++;
-    pilha = realloc(pilha, (topo + 1) * sizeof(Historico));
-    if (pilha == NULL) {
+
+// Inicializar a pilha do histórico
+HistoricoPilha* inicializarHistorico() {
+    HistoricoPilha *hp = malloc(sizeof(HistoricoPilha));
+    if (hp == NULL) {
+        printf("Erro ao alocar memória para o histórico!\n");
+        exit(1);
+    }
+    hp->pilha = NULL;
+    hp->topo = -1;
+    return hp;
+}
+
+// Liberar a pilha do histórico
+void liberarHistorico(HistoricoPilha *hp) {
+    if (hp == NULL) return;
+    
+    // Liberar todos os estados salvos
+    for (int i = 0; i <= hp->topo; i++) {
+        liberarMatriz(hp->pilha[i].L, hp->pilha[i].estadoMatriz);
+    }
+    
+    free(hp->pilha);
+    free(hp);
+}
+
+// Funcao para salvar o estado atual da matriz na pilha
+char **copiarMatriz(int L, int C, char **carac) {
+    if (carac == NULL) return NULL;
+    
+    char **copia = malloc(L * sizeof(char *));
+    if (copia == NULL) return NULL;
+    
+    for (int i = 0; i < L; i++) {
+        copia[i] = malloc((C + 1) * sizeof(char));
+        if (copia[i] == NULL) {
+            // Liberar memória já alocada em caso de falha
+            for (int j = 0; j < i; j++) {
+                free(copia[j]);
+            }
+            free(copia);
+            return NULL;
+        }
+        strcpy(copia[i], carac[i]);
+    }
+    return copia;
+}
+
+
+void empilharComando(HistoricoPilha *hp, char tipoComando, int L, int C, char **carac) {
+    hp->topo++;
+    hp->pilha = realloc(hp->pilha, (hp->topo + 1) * sizeof(Historico));
+    if (hp->pilha == NULL) {
         printf("Erro ao alocar memória para o histórico de comandos!\n");
         exit(1);
     }
-    pilha[topo].tipoComando = tipoComando;
-    pilha[topo].L = L;
-    pilha[topo].C = C;
-    pilha[topo].estadoMatriz = copiarMatriz(L, C, carac);
+    hp->pilha[hp->topo].tipoComando = tipoComando;
+    hp->pilha[hp->topo].L = L;
+    hp->pilha[hp->topo].C = C;
+    hp->pilha[hp->topo].estadoMatriz = copiarMatriz(L, C, carac);
 }
 
 void printMatriz(int L, int C, char **carac) {
@@ -58,7 +99,7 @@ void printMatriz(int L, int C, char **carac) {
     printf("\n");
 }
 
-void salvarJogo(char *nomeArquivo, int L, int C, char **carac) {
+void salvarJogo(HistoricoPilha *hp, char *nomeArquivo, int L, int C, char **carac) {
     FILE *arquivo = fopen(nomeArquivo, "w");
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo para salvar o jogo!\n");
@@ -74,8 +115,27 @@ void salvarJogo(char *nomeArquivo, int L, int C, char **carac) {
     }
     
     // Salvar o estado atual no histórico
-    empilharComando('g', L, C, carac);
+    empilharComando(hp, 'g', L, C, carac);
 
+    fclose(arquivo);
+    printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
+}
+
+void salvarJogoSem(char *nomeArquivo, int L, int C, char **carac) {
+    FILE *arquivo = fopen(nomeArquivo, "w");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para salvar o jogo!\n");
+        return;
+    }
+
+    // Salvar as dimensões da matriz
+    fprintf(arquivo, "%d %d\n", L, C);
+
+    // Salvar o conteúdo da matriz
+    for (int i = 0; i < L; i++) {
+        fprintf(arquivo, "%s\n", carac[i]);
+    }
+    
     fclose(arquivo);
     printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
 }
@@ -165,7 +225,7 @@ int determinarCoordenadas(char *coordenada, int *x, int *y) {
     return 1; // Retorna 1 para indicar sucesso
 }
 
-void executarComandoR(int L, int C, char **carac, char *comando) {
+void executarComandoR(HistoricoPilha *hp, int L, int C, char **carac, char *comando) {
     char coordenada[10];
     if (sscanf(comando, "r %s", coordenada) != 1) {
         printf("Comando inválido!\n");
@@ -184,14 +244,14 @@ void executarComandoR(int L, int C, char **carac, char *comando) {
     }
 
     // Salvar o estado atual no histórico
-    empilharComando('r', L, C, carac);
+    empilharComando(hp, 'r', L, C, carac);
 
     // Modificar a matriz
     carac[x][y] = '#';
     printf("Posição (%c, %d) alterada para '#'.\n", 'a' + x, y + 1);
 }
 
-void executarComandoB(int L, int C, char **carac, char *comando) {
+void executarComandoB(HistoricoPilha *hp, int L, int C, char **carac, char *comando) {
     char coordenada[10];
     if (sscanf(comando, "b %s", coordenada) != 1) {
         printf("Comando inválido!\n");
@@ -210,7 +270,7 @@ void executarComandoB(int L, int C, char **carac, char *comando) {
     }
 
     // Salvar o estado atual no histórico
-    empilharComando('b', L, C, carac);
+    empilharComando(hp, 'b', L, C, carac);
 
     // Modificar a matriz
     carac[x][y] = toupper(carac[x][y]);
@@ -282,54 +342,6 @@ int vizinhaFicaIsolada(int i, int j, int L, int C, char **carac) {
     return 0; // Nenhuma vizinha ficaria isolada
 }
 
-void executarComandoa(int L, int C, char **carac) {
-    int k, i, j;
-
-    // Salvar o estado atual no histórico
-    empilharComando('a', L, C, carac);
-
-    // 1. Riscar todas as letras iguais a uma letra branca na mesma linha e/ou coluna
-    for (i = 0; i < L; i++) {
-        for (j = 0; j < C; j++) {
-            if (isupper(carac[i][j])) {
-                char z = tolower(carac[i][j]);
-                for (k = 0; k < L; k++) {
-                    if (carac[k][j] == z) {
-                        carac[k][j] = '#';
-                    }
-                }
-                for (k = 0; k < C; k++) {
-                    if (carac[i][k] == z) {
-                        carac[i][k] = '#';
-                    }
-                }
-            }
-        }
-    }
-
-    // 2. Pintar de branco todas as casas vizinhas de uma casa riscada
-    for (i = 0; i < L; i++) {
-        for (j = 0; j < C; j++) {
-            if (carac[i][j] == '#') {
-                if (i + 1 < L && islower(carac[i + 1][j])) carac[i + 1][j] = toupper(carac[i + 1][j]);
-                if (i - 1 >= 0 && islower(carac[i - 1][j])) carac[i - 1][j] = toupper(carac[i - 1][j]);
-                if (j + 1 < C && islower(carac[i][j + 1])) carac[i][j + 1] = toupper(carac[i][j + 1]);
-                if (j - 1 >= 0 && islower(carac[i][j - 1])) carac[i][j - 1] = toupper(carac[i][j - 1]);
-            }
-        }
-    }
-
-    for (i = 0; i < L; i++) {
-        for (j = 0; j < C; j++) {
-            if (carac[i][j] != '#' && islower(carac[i][j])) {
-                if (vizinhaFicaIsolada(i, j, L, C, carac)) {
-                    carac[i][j] = toupper(carac[i][j]);
-                }
-            }
-        }
-    }
-}
-
 void executarComandoasem(int L, int C, char **carac) {
     int k, i, j;
 
@@ -375,12 +387,16 @@ void executarComandoasem(int L, int C, char **carac) {
     }
 }
 
+void executarComandoa(HistoricoPilha *hp, int L, int C, char **carac) {
+    // Salvar o estado atual no histórico
+    empilharComando(hp, 'a', L, C, carac);
 
-void executarComandoA(int L, int C, char **carac) {
+    // Executar o comando sem salvar no histórico
+    executarComandoasem(L, C, carac);
+}
+
+void executarComandoAsem(int L, int C, char **carac) {
     int mudou = 1; // Inicialmente, assumimos que haverá mudanças
-
-    // Salvar o estado inicial no histórico
-    empilharComando('A', L, C, carac);
 
     // Enquanto houver mudanças no tabuleiro
     while (mudou) {
@@ -388,6 +404,10 @@ void executarComandoA(int L, int C, char **carac) {
 
         // Copiar o estado atual da matriz para comparação
         char **estadoAnterior = copiarMatriz(L, C, carac);
+        if (estadoAnterior == NULL) {
+            printf("Erro ao alocar memória para a cópia da matriz!\n");
+            return;
+        }
 
         // Executar o comando `a`
         executarComandoasem(L, C, carac);
@@ -403,6 +423,14 @@ void executarComandoA(int L, int C, char **carac) {
         // Liberar a memória da cópia do estado anterior
         liberarMatriz(L, estadoAnterior);
     }
+}
+
+void executarComandoA(HistoricoPilha *hp, int L, int C, char **carac) {
+    // Salvar o estado inicial no histórico
+    empilharComando(hp, 'A', L, C, carac);
+
+    // Executar o comando sem salvar no histórico
+    executarComandoAsem(L, C, carac);
 
     printf("Comando 'A' executado: o tabuleiro foi atualizado até estabilizar.\n");
 }
@@ -416,25 +444,25 @@ int executarComandov(int L, int C, char **carac) {
         for (j = 0; j < C; j++) {
             if (carac[i][j] == '#') {
                 // Verificar vizinho acima
-            if (i > 0 && carac[i - 1][j] == '#') {
-                tudocerto = 0;
-                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' acima.\n", i + 1, j + 1);
-            }
-            // Verificar vizinho abaixo
-            if (i < L - 1 && carac[i + 1][j] == '#') {
-                tudocerto = 0;
-                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' abaixo.\n", i + 1, j + 1);
-            }
-            // Verificar vizinho à esquerda
-            if (j > 0 && carac[i][j - 1] == '#') {
-                tudocerto = 0;
-                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à esquerda.\n", i + 1, j + 1);
-            }
-            // Verificar vizinho à direita
-            if (j < C - 1 && carac[i][j + 1] == '#') {
-                tudocerto = 0;
-                printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à direita.\n", i + 1, j + 1);
-            }
+                if (i > 0 && carac[i - 1][j] == '#') {
+                    tudocerto = 0;
+                    printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' acima.\n", i + 1, j + 1);
+                }
+                // Verificar vizinho abaixo
+                if (i < L - 1 && carac[i + 1][j] == '#') {
+                    tudocerto = 0;
+                    printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' abaixo.\n", i + 1, j + 1);
+                }
+                // Verificar vizinho à esquerda
+                if (j > 0 && carac[i][j - 1] == '#') {
+                    tudocerto = 0;
+                    printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à esquerda.\n", i + 1, j + 1);
+                }
+                // Verificar vizinho à direita
+                if (j < C - 1 && carac[i][j + 1] == '#') {
+                    tudocerto = 0;
+                    printf("Restrição violada: '#' na linha %d e coluna %d está junto com '#' à direita.\n", i + 1, j + 1);
+                }
                 // Verifica se as letras ao lado de '#' são maiúsculas
                 if (i + 1 < L && isalpha(carac[i + 1][j]) && !isupper(carac[i + 1][j])) {
                     tudocerto = 0;
@@ -489,25 +517,23 @@ int executarComandov(int L, int C, char **carac) {
                     printf("Restrição violada: letra maiúscula na linha %d e coluna %d não tem nenhum caminho ortogonal.\n", i + 1, j + 1);
                 }
             }
-
         }
     }
-    // Salvar o estado atual no histórico
-   // empilharComando('v', L, C, carac); deixei em comentario pq assim da para fazer o comando d dps de fazer o comando v
+    
     if (iguais) printf("Existem letras repetidas na mesma linha ou coluna.\n");
     if (tudocerto) printf("Não foi violada nenhuma das restrições.\n");
     return tudocerto;
 }
 
 // Função para desfazer o último comando
-void desfazerComando(char ***carac, int *L, int *C) {
-    if (topo == -1) {
+void desfazerComando(HistoricoPilha *hp, char ***carac, int *L, int *C) {
+    if (hp->topo == -1) {
         printf("Nenhum comando para desfazer!\n");
         return;
     }
 
     // Recuperar o último comando
-    Historico ultimo = pilha[topo];
+    Historico ultimo = hp->pilha[hp->topo];
 
     // Verifica se o comando é 'v'
     if (ultimo.tipoComando == 'v') {
@@ -515,7 +541,7 @@ void desfazerComando(char ***carac, int *L, int *C) {
         return;
     }
 
-    topo--;
+    hp->topo--;
 
     // Liberar a matriz atual
     liberarMatriz(*L, *carac);
@@ -568,55 +594,7 @@ void procurarPadrãoAAA(int L, int C, char **carac) {
     }
 }
 
-void executarComandoAsem(int L, int C, char **carac) {
-    int mudou = 1; // Inicialmente, assumimos que haverá mudanças
-
-
-    // Enquanto houver mudanças no tabuleiro
-    while (mudou) {
-        mudou = 0; // Resetar a variável de controle
-
-        // Copiar o estado atual da matriz para comparação
-        char **estadoAnterior = copiarMatriz(L, C, carac);
-
-        // Executar o comando `a`
-        executarComandoasem(L, C, carac);
-
-        // Verificar se houve mudanças no tabuleiro
-        for (int i = 0; i < L; i++) {
-            if (strcmp(estadoAnterior[i], carac[i]) != 0) {
-                mudou = 1; // Detectamos mudanças
-                break;
-            }
-        }
-
-        // Liberar a memória da cópia do estado anterior
-        liberarMatriz(L, estadoAnterior);
-    }
-
-}
-
-void salvarJogosem(char *nomeArquivo, int L, int C, char **carac) {
-    FILE *arquivo = fopen(nomeArquivo, "w");
-    if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo para salvar o jogo!\n");
-        return;
-    }
-
-    // Salvar as dimensões da matriz
-    fprintf(arquivo, "%d %d\n", L, C);
-
-    // Salvar o conteúdo da matriz
-    for (int i = 0; i < L; i++) {
-        fprintf(arquivo, "%s\n", carac[i]);
-    }
-    
-    fclose(arquivo);
-    printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
-}
-
-
-void resolverJogo(int L, int C, char **carac) {
+void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
     // Guardar uma cópia da matriz original antes de resolver
     char **original = copiarMatriz(L, C, carac);
     if (original == NULL) {
@@ -625,7 +603,7 @@ void resolverJogo(int L, int C, char **carac) {
     }
     
     // Salvar o estado inicial no histórico
-    empilharComando('R', L, C, carac);
+    empilharComando(hp, 'R', L, C, carac);
 
     printf("Jogo carregado do ficheiro 'res.txt'. Iniciando resolução...\n");
 
@@ -676,7 +654,7 @@ void resolverJogo(int L, int C, char **carac) {
                         if (!executarComandov(L, C, carac)) {
                             printf("Contradição encontrada ao pintar. Voltando atrás...\n");
                             liberarMatriz(L, original);
-                            desfazerComando(&carac, &L, &C);
+                            desfazerComando(hp, &carac, &L, &C);
                             return;
                         }
                     } else {
@@ -691,7 +669,7 @@ void resolverJogo(int L, int C, char **carac) {
                         if (!executarComandov(L, C, carac)) {
                             printf("Contradição encontrada ao riscar. Voltando atrás...\n");
                             liberarMatriz(L, original);
-                            desfazerComando(&carac, &L, &C);
+                            desfazerComando(hp, &carac, &L, &C);
                             return;
                         }
                     }
@@ -714,7 +692,7 @@ void resolverJogo(int L, int C, char **carac) {
     printf("Jogo resolvido automaticamente.\n");
 
     // Salvar o estado resolvido no ficheiro res.txt
-    salvarJogosem("res.txt", L, C, carac);
+    salvarJogoSem("res.txt", L, C, carac);
     
     // Liberar a memória da cópia original antes de sair
     liberarMatriz(L, original);
