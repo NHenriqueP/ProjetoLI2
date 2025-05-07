@@ -107,7 +107,7 @@ int main() {
             continue;
         }
 
-        // Verifica se o comando é 'l' para carregar o jogo
+// Verifica se o comando é 'l' para carregar o jogo
         if (comando[0] == 'l' && comando[1] == '\n') {
             // Salvar o estado atual no histórico antes de carregar o novo jogo
             empilharComando('l', L, C, carac);
@@ -117,6 +117,7 @@ int main() {
                 free(carac[i]);
             }
             free(carac);
+            carac = NULL; // Adicionar esta linha para definir carac como NULL após liberá-lo
 
             if (carregarJogo("jogo.txt", &L, &C, &carac)) {
                 printf("Jogo carregado com sucesso.\n");
@@ -162,19 +163,19 @@ int main() {
         // Verifica se o comando é "R" para resolver o jogo automaticamente
         if (comando[0] == 'R' && comando[1] == '\n') {
             resolverJogo(L, C, carac);
-
-        // Após resolver o jogo, carregar a matriz de res.txt
-        if (carregarJogo("res.txt", &L, &C, &carac)) {
-            printf("Matriz resolvida carregada do ficheiro 'res.txt':\n");
-            printMatriz(L, C, carac); // Imprime a matriz resolvida
-        } else {
-            printf("Erro ao carregar a matriz resolvida do ficheiro 'res.txt'.\n");
-        }
-            continue;
-        }
-
-        if (comando[0] == 'A' && comando[1] == '\n') {
-            executarComandoA(L, C, carac);
+    
+            // Após resolver o jogo, carregar a matriz de res.txt
+            for (int i = 0; i < L; i++) {
+                free(carac[i]);
+            }
+            free(carac);
+            carac = NULL;
+    
+            if (carregarJogo("res.txt", &L, &C, &carac)) {
+                printf("Matriz resolvida carregada do ficheiro 'res.txt':\n");
+            } else {
+                printf("Erro ao carregar a matriz resolvida do ficheiro 'res.txt'.\n");
+            }
             continue;
         }
     }

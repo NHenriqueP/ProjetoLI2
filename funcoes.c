@@ -25,8 +25,12 @@ char **copiarMatriz(int L, int C, char **carac) {
 }
 
 void liberarMatriz(int L, char **matriz) {
+    if (matriz == NULL) return;
+    
     for (int i = 0; i < L; i++) {
-        free(matriz[i]);
+        if (matriz[i] != NULL) {
+            free(matriz[i]);
+        }
     }
     free(matriz);
 }
@@ -91,7 +95,13 @@ int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
     }
     printf("Dimensões lidas: L = %d, C = %d\n", *L, *C);
 
-    // Alocar memória para a matriz
+    // Liberar a matriz atual, se já estiver alocada
+    if (*carac != NULL) {
+        liberarMatriz(*L, *carac);
+        *carac = NULL; // Atualizar o ponteiro para evitar uso após liberação
+    }
+
+    // Alocar memória para a nova matriz
     *carac = malloc(*L * sizeof(char *));
     if (*carac == NULL) {
         printf("Erro ao alocar memória para a matriz!\n");
@@ -103,6 +113,7 @@ int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
         (*carac)[i] = malloc((*C + 1) * sizeof(char));
         if ((*carac)[i] == NULL) {
             printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
+            liberarMatriz(i, *carac);
             fclose(arquivo);
             return 0;
         }
@@ -112,6 +123,7 @@ int carregarJogo(char *nomeArquivo, int *L, int *C, char ***carac) {
     for (int i = 0; i < *L; i++) {
         if (fscanf(arquivo, "%s", (*carac)[i]) != 1) {
             printf("Erro ao ler a linha %d do jogo no arquivo!\n", i);
+            liberarMatriz(*L, *carac);
             fclose(arquivo);
             return 0;
         }
@@ -584,23 +596,44 @@ void executarComandoAsem(int L, int C, char **carac) {
 
 }
 
-void resolverJogo(int L, int C, char **carac) {
-    // Carregar a matriz do ficheiro res.txt
-    if (!carregarJogo("res.txt", &L, &C, &carac)) {
-        printf("Erro ao carregar o jogo do ficheiro 'res.txt'.\n");
+void salvarJogosem(char *nomeArquivo, int L, int C, char **carac) {
+    FILE *arquivo = fopen(nomeArquivo, "w");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo para salvar o jogo!\n");
         return;
     }
 
-    printf("Jogo carregado do ficheiro 'res.txt'. Iniciando resolução...\n");
+    // Salvar as dimensões da matriz
+    fprintf(arquivo, "%d %d\n", L, C);
 
-    int mudou = 1;
+    // Salvar o conteúdo da matriz
+    for (int i = 0; i < L; i++) {
+        fprintf(arquivo, "%s\n", carac[i]);
+    }
+    
+    fclose(arquivo);
+    printf("\nJogo salvo com sucesso no arquivo '%s'.\n\n", nomeArquivo);
+}
 
+
+void resolverJogo(int L, int C, char **carac) {
+    // Guardar uma cópia da matriz original antes de resolver
+    char **original = copiarMatriz(L, C, carac);
+    if (original == NULL) {
+        printf("Erro ao alocar memória para a cópia da matriz.\n");
+        return;
+    }
+    
     // Salvar o estado inicial no histórico
     empilharComando('R', L, C, carac);
 
+    printf("Jogo carregado do ficheiro 'res.txt'. Iniciando resolução...\n");
+
+    // Procurar padrões e aplicar regras para resolver o jogo
+    int mudou = 1;
     while (mudou) {
         mudou = 0;
-
+        
         // 1. Procurar padrões ABA e AA.A
         procurarPadrãoABA(L, C, carac);
         procurarPadrãoAAA(L, C, carac);
@@ -642,6 +675,7 @@ void resolverJogo(int L, int C, char **carac) {
                         // Verificar se há contradições
                         if (!executarComandov(L, C, carac)) {
                             printf("Contradição encontrada ao pintar. Voltando atrás...\n");
+                            liberarMatriz(L, original);
                             desfazerComando(&carac, &L, &C);
                             return;
                         }
@@ -656,6 +690,7 @@ void resolverJogo(int L, int C, char **carac) {
                         // Verificar se há contradições
                         if (!executarComandov(L, C, carac)) {
                             printf("Contradição encontrada ao riscar. Voltando atrás...\n");
+                            liberarMatriz(L, original);
                             desfazerComando(&carac, &L, &C);
                             return;
                         }
@@ -679,5 +714,8 @@ void resolverJogo(int L, int C, char **carac) {
     printf("Jogo resolvido automaticamente.\n");
 
     // Salvar o estado resolvido no ficheiro res.txt
-    salvarJogo("res.txt", L, C, carac);
+    salvarJogosem("res.txt", L, C, carac);
+    
+    // Liberar a memória da cópia original antes de sair
+    liberarMatriz(L, original);
 }
