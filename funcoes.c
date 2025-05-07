@@ -586,6 +586,14 @@ void executarComandoAsem(int L, int C, char **carac) {
 
 
 void resolverJogo(int L, int C, char **carac) {
+    // Carregar a matriz do ficheiro res.txt
+    if (!carregarJogo("res.txt", &L, &C, &carac)) {
+        printf("Erro ao carregar o jogo do ficheiro 'res.txt'.\n");
+        return;
+    }
+
+    printf("Jogo carregado do ficheiro 'res.txt'. Iniciando resolução...\n");
+
     int mudou = 1;
 
     // Salvar o estado inicial no histórico
@@ -670,4 +678,7 @@ void resolverJogo(int L, int C, char **carac) {
     }
 
     printf("Jogo resolvido automaticamente.\n");
+
+    // Salvar o estado resolvido no ficheiro res.txt
+    salvarJogo("res.txt", L, C, carac);
 }
