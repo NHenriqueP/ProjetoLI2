@@ -605,6 +605,7 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
     // Salvar o estado inicial no histórico
     empilharComando(hp, 'R', L, C, carac);
 
+    carregarJogo("res.txt", &L, &C, &original);
     printf("Jogo carregado do ficheiro 'res.txt'. Iniciando resolução...\n");
 
     // Procurar padrões e aplicar regras para resolver o jogo
@@ -613,22 +614,22 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
         mudou = 0;
         
         // 1. Procurar padrões ABA e AA.A
-        procurarPadrãoABA(L, C, carac);
-        procurarPadrãoAAA(L, C, carac);
+        procurarPadrãoABA(L, C, original);
+        procurarPadrãoAAA(L, C, original);
 
         // 2. Usar o comando A para estabilizar o tabuleiro
-        executarComandoAsem(L, C, carac);
+        executarComandoAsem(L, C, original);
 
         // 3. Procurar letras repetidas em linhas ou colunas
         for (int i = 0; i < L; i++) {
             for (int j = 0; j < C; j++) {
-                if (islower(carac[i][j])) {
-                    char simbolo = carac[i][j];
+                if (islower(original[i][j])) {
+                    char simbolo = original[i][j];
                     int unico = 1;
 
                     // Verificar se o símbolo é único na linha
                     for (int k = 0; k < C; k++) {
-                        if (k != j && carac[i][k] == simbolo) {
+                        if (k != j && original[i][k] == simbolo) {
                             unico = 0;
                             break;
                         }
@@ -636,7 +637,7 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
 
                     // Verificar se o símbolo é único na coluna
                     for (int k = 0; k < L; k++) {
-                        if (k != i && carac[k][j] == simbolo) {
+                        if (k != i && original[k][j] == simbolo) {
                             unico = 0;
                             break;
                         }
@@ -644,14 +645,14 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
 
                     // Se for único, pintar de branco
                     if (unico) {
-                        carac[i][j] = toupper(carac[i][j]);
+                        original[i][j] = toupper(original[i][j]);
                         mudou = 1;
 
                         // Usar o comando A após pintar
-                        executarComandoAsem(L, C, carac);
+                        executarComandoAsem(L, C, original);
 
                         // Verificar se há contradições
-                        if (!executarComandov(L, C, carac)) {
+                        if (!executarComandov(L, C, original)) {
                             printf("Contradição encontrada ao pintar. Voltando atrás...\n");
                             liberarMatriz(L, original);
                             desfazerComando(hp, &carac, &L, &C);
@@ -659,17 +660,17 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
                         }
                     } else {
                         // Se não for único, tentar riscar
-                        carac[i][j] = '#';
+                        original[i][j] = '#';
                         mudou = 1;
 
                         // Usar o comando A após riscar
-                        executarComandoAsem(L, C, carac);
+                        executarComandoAsem(L, C, original);
 
                         // Verificar se há contradições
-                        if (!executarComandov(L, C, carac)) {
+                        if (!executarComandov(L, C, original)) {
                             printf("Contradição encontrada ao riscar. Voltando atrás...\n");
                             liberarMatriz(L, original);
-                            desfazerComando(hp, &carac, &L, &C);
+                            desfazerComando(hp, &original, &L, &C);
                             return;
                         }
                     }
@@ -680,7 +681,7 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
         // Verificar se ainda há mudanças possíveis
         for (int i = 0; i < L; i++) {
             for (int j = 0; j < C; j++) {
-                if (carac[i][j] == '.') {
+                if (original[i][j] == '.') {
                     mudou = 1;
                     break;
                 }
@@ -692,7 +693,7 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
     printf("Jogo resolvido automaticamente.\n");
 
     // Salvar o estado resolvido no ficheiro res.txt
-    salvarJogoSem("res.txt", L, C, carac);
+    salvarJogoSem("res.txt", L, C, original);
     
     // Liberar a memória da cópia original antes de sair
     liberarMatriz(L, original);
