@@ -302,6 +302,29 @@ void test_comandoDesfazer() {
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
 
+void test_executarComandoa() {
+    int L = 3, C = 3;
+    char **matriz = malloc(L * sizeof(char *));
+    matriz[0] = strdup("acb");
+    matriz[1] = strdup("u#t");
+    matriz[2] = strdup("abc");
+
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
+
+    // Executar o comando 'a'
+    executarComandoa(hp, L, C, matriz);
+
+    // Verificar o estado final esperado
+    CU_ASSERT_STRING_EQUAL(matriz[0], "aCb");
+    CU_ASSERT_STRING_EQUAL(matriz[1], "U#T");
+    CU_ASSERT_STRING_EQUAL(matriz[2], "aBc");
+
+    liberarHistorico(hp);
+    free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
+}
+
+
 int main() {
     CU_initialize_registry();
 
@@ -320,6 +343,8 @@ int main() {
     CU_add_test(suite, "Test isoladoOrtogonais", test_isoladoOrtogonais);
     CU_add_test(suite, "Test vizinhaFicaIsolada", test_vizinhaFicaIsolada);
     CU_add_test(suite, "Test comandoDesfazer", test_comandoDesfazer);
+    CU_add_test(suite, "Test executarComandoa", test_executarComandoa);
+    CU_add_test(suite, "Test resolverJogo", test_resolverJogo);
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
