@@ -24,8 +24,11 @@ void test_salvar_e_carregar_jogo() {
     char **matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("abc");
     matriz[1] = strdup("def");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
-    salvarJogo("teste_jogo.txt", L, C, matriz);
+    salvarJogo(hp, "teste_jogo.txt", L, C, matriz);
 
     char **carregado = NULL;
     int l2, c2;
@@ -36,9 +39,10 @@ void test_salvar_e_carregar_jogo() {
     CU_ASSERT_STRING_EQUAL(carregado[0], "abc");
     CU_ASSERT_STRING_EQUAL(carregado[1], "def");
 
- // Liberar memória
+    // Liberar memória
     free(matriz[0]); free(matriz[1]); free(matriz);
     free(carregado[0]); free(carregado[1]); free(carregado);
+    liberarHistorico(hp);
     remove("teste_jogo.txt");
 }
 
@@ -47,13 +51,17 @@ void test_executarComandoR_B() {
     char **matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("abc");
     matriz[1] = strdup("def");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
-    executarComandoR(L, C, matriz, "r a2");
+    executarComandoR(hp, L, C, matriz, "r a2");
     CU_ASSERT_EQUAL(matriz[0][1], '#');
 
-    executarComandoB(L, C, matriz, "b b3");
+    executarComandoB(hp, L, C, matriz, "b b3");
     CU_ASSERT_EQUAL(matriz[1][2], 'F'); // 'f' vira 'F'
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz);
 }
 
@@ -73,24 +81,28 @@ void test_empilhar_e_desfazer_comando() {
     char **matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("abc");
     matriz[1] = strdup("def");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
     // Empilhar o estado inicial
-    empilharComando('r', L, C, matriz);
+    empilharComando(hp, 'r', L, C, matriz);
 
     // Modificar a matriz
     matriz[0][0] = '#';
 
     // Desfazer o comando
-    desfazerComando(&matriz, &L, &C);
+    desfazerComando(hp, &matriz, &L, &C);
 
     // Verificar se o estado foi restaurado
     CU_ASSERT_STRING_EQUAL(matriz[0], "abc");
     CU_ASSERT_STRING_EQUAL(matriz[1], "def");
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz);
 }
 
-/*void test_resolverJogo() {
+void test_resolverJogo() {
     int L = 5, C = 5;
     char **matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("ecadc");
@@ -98,8 +110,11 @@ void test_empilhar_e_desfazer_comando() {
     matriz[2] = strdup("bddce");
     matriz[3] = strdup("cdeeb");
     matriz[4] = strdup("accbb");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
-    resolverJogo(L, C, matriz);
+    resolverJogo(hp, L, C, matriz);
 
     // Verificar o estado final esperado
     CU_ASSERT_STRING_EQUAL(matriz[0], "E#ADC");
@@ -108,8 +123,9 @@ void test_empilhar_e_desfazer_comando() {
     CU_ASSERT_STRING_EQUAL(matriz[3], "CDE#B");
     CU_ASSERT_STRING_EQUAL(matriz[4], "A#CB#");
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz[3]); free(matriz[4]); free(matriz);
-}*/
+}
 
 void test_executarComandoa_caso1() {
     int L = 4, C = 4;
@@ -118,8 +134,11 @@ void test_executarComandoa_caso1() {
     matriz[1] = strdup("a#cd");
     matriz[2] = strdup("abcd");
     matriz[3] = strdup("abcd");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
-    executarComandoa(L, C, matriz);
+    executarComandoa(hp, L, C, matriz);
 
     // Verificar o estado final esperado
     CU_ASSERT_STRING_EQUAL(matriz[0], "aBcd");
@@ -127,6 +146,7 @@ void test_executarComandoa_caso1() {
     CU_ASSERT_STRING_EQUAL(matriz[2], "aBcd");
     CU_ASSERT_STRING_EQUAL(matriz[3], "abcd");
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz[3]); free(matriz);
 }
 
@@ -136,14 +156,18 @@ void test_executarComandoa_caso2() {
     matriz[0] = strdup("a#a");
     matriz[1] = strdup("b#b");
     matriz[2] = strdup("c#c");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
-    executarComandoa(L, C, matriz);
+    executarComandoa(hp, L, C, matriz);
 
     // Verificar o estado final esperado
     CU_ASSERT_STRING_EQUAL(matriz[0], "A#A");
     CU_ASSERT_STRING_EQUAL(matriz[1], "B#B");
     CU_ASSERT_STRING_EQUAL(matriz[2], "C#C");
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
 
@@ -157,21 +181,23 @@ void test_executarComandov() {
     // Executar o comando de verificação
     CU_ASSERT_TRUE(executarComandov(L, C, matriz));
 
+    free(matriz[0]); free(matriz[1]); free(matriz[2]);
+    
+    matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("ccA");
     matriz[1] = strdup("B#A");
     matriz[2] = strdup("CBD");
 
     CU_ASSERT_FALSE(executarComandov(L, C, matriz));
 
-
+    free(matriz[0]); free(matriz[1]); free(matriz[2]);
+    
+    matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("CCA");
     matriz[1] = strdup("B#A");
     matriz[2] = strdup("CBD");
 
     CU_ASSERT_FALSE(executarComandov(L, C, matriz));
-
-    // Não há restrições violadas neste caso
-    // Apenas verificamos se a função roda sem erros
 
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
@@ -182,14 +208,18 @@ void test_executarComandoa_caso3() {
     matriz[0] = strdup("abc");
     matriz[1] = strdup("def");
     matriz[2] = strdup("ghi");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
-    executarComandoa(L, C, matriz);
+    executarComandoa(hp, L, C, matriz);
 
     // Verificar o estado final esperado (nenhuma mudança, pois não há letras riscadas)
     CU_ASSERT_STRING_EQUAL(matriz[0], "abc");
     CU_ASSERT_STRING_EQUAL(matriz[1], "def");
     CU_ASSERT_STRING_EQUAL(matriz[2], "ghi");
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
 
@@ -204,6 +234,9 @@ void test_isoladoOrtogonais() {
     CU_ASSERT_TRUE(isoladoOrtogonais(0, 0, L, C, matriz)); // A está isolado
     CU_ASSERT_FALSE(isoladoOrtogonais(1, 1, L, C, matriz)); //  não está isolado
 
+    free(matriz[0]); free(matriz[1]); free(matriz[2]);
+    
+    matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("#DC");
     matriz[1] = strdup("B#A");
     matriz[2] = strdup("#BA");
@@ -224,6 +257,9 @@ void test_vizinhaFicaIsolada() {
     CU_ASSERT_TRUE(vizinhaFicaIsolada(1, 0, L, C, matriz)); // A ficaria isolado
     CU_ASSERT_FALSE(vizinhaFicaIsolada(1, 1, L, C, matriz)); // D não causa isolamento
 
+    free(matriz[0]); free(matriz[1]); free(matriz[2]);
+    
+    matriz = malloc(L * sizeof(char *));
     matriz[0] = strdup("#DC");
     matriz[1] = strdup("BCA");
     matriz[2] = strdup("#BA");
@@ -240,16 +276,19 @@ void test_comandoDesfazer() {
     matriz[0] = strdup("abc");
     matriz[1] = strdup("def");
     matriz[2] = strdup("ghi");
+    
+    // Inicializar o histórico para o teste
+    HistoricoPilha *hp = inicializarHistorico();
 
     // Empilhar o estado inicial
-    empilharComando('r', L, C, matriz);
+    empilharComando(hp, 'r', L, C, matriz);
 
     // Modificar a matriz
     matriz[0][0] = '#';
     matriz[1][1] = 'E';
 
     // Desfazer o comando
-    desfazerComando(&matriz, &L, &C);
+    desfazerComando(hp, &matriz, &L, &C);
 
     // Verificar se o estado foi restaurado
     CU_ASSERT_STRING_EQUAL(matriz[0], "abc");
@@ -257,8 +296,9 @@ void test_comandoDesfazer() {
     CU_ASSERT_STRING_EQUAL(matriz[2], "ghi");
 
     // Testar desfazer sem comandos na pilha
-    desfazerComando(&matriz, &L, &C); // Não deve causar erro
+    desfazerComando(hp, &matriz, &L, &C); // Não deve causar erro
 
+    liberarHistorico(hp);
     free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz);
 }
 
@@ -272,7 +312,7 @@ int main() {
     CU_add_test(suite, "Test executarComandoR e B", test_executarComandoR_B);
     CU_add_test(suite, "Test printMatriz", test_printMatriz);
     CU_add_test(suite, "Test empilhar e desfazer comando", test_empilhar_e_desfazer_comando);
-    //CU_add_test(suite, "Test resolverJogo", test_resolverJogo);
+    CU_add_test(suite, "Test resolverJogo", test_resolverJogo);
     CU_add_test(suite, "Test executarComandoa caso 1", test_executarComandoa_caso1);
     CU_add_test(suite, "Test executarComandoa caso 2", test_executarComandoa_caso2);
     CU_add_test(suite, "Test executarComandoa caso 3", test_executarComandoa_caso3);
