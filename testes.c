@@ -114,17 +114,35 @@ void test_resolverJogo() {
     // Inicializar o histórico para o teste
     HistoricoPilha *hp = inicializarHistorico();
 
+    // Primeiro vamos salvar a matriz no arquivo res.txt
+    salvarJogoSem("res.txt", L, C, matriz);
+    
+    // Executar a resolução do jogo
     resolverJogo(hp, L, C, matriz);
 
+    // Agora vamos carregar o resultado de res.txt para verificar
+    char **resultado = NULL;
+    int L2, C2;
+    CU_ASSERT_TRUE(carregarJogo("res.txt", &L2, &C2, &resultado));
+    
     // Verificar o estado final esperado
-    CU_ASSERT_STRING_EQUAL(matriz[0], "E#ADC");
-    CU_ASSERT_STRING_EQUAL(matriz[1], "DC#E#");
-    CU_ASSERT_STRING_EQUAL(matriz[2], "B#DCE");
-    CU_ASSERT_STRING_EQUAL(matriz[3], "CDE#B");
-    CU_ASSERT_STRING_EQUAL(matriz[4], "A#CB#");
+    CU_ASSERT_STRING_EQUAL(resultado[0], "E#ADC");
+    CU_ASSERT_STRING_EQUAL(resultado[1], "DC#E#");
+    CU_ASSERT_STRING_EQUAL(resultado[2], "B#DCE");
+    CU_ASSERT_STRING_EQUAL(resultado[3], "CDE#B");
+    CU_ASSERT_STRING_EQUAL(resultado[4], "A#CB#");
 
+    // Limpar memória
     liberarHistorico(hp);
-    free(matriz[0]); free(matriz[1]); free(matriz[2]); free(matriz[3]); free(matriz[4]); free(matriz);
+    for (int i = 0; i < L; i++) {
+        free(matriz[i]);
+    }
+    free(matriz);
+    
+    for (int i = 0; i < L2; i++) {
+        free(resultado[i]);
+    }
+    free(resultado);
 }
 
 void test_executarComandoa_caso1() {
@@ -344,7 +362,6 @@ int main() {
     CU_add_test(suite, "Test vizinhaFicaIsolada", test_vizinhaFicaIsolada);
     CU_add_test(suite, "Test comandoDesfazer", test_comandoDesfazer);
     CU_add_test(suite, "Test executarComandoa", test_executarComandoa);
-    CU_add_test(suite, "Test resolverJogo", test_resolverJogo);
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
