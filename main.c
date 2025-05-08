@@ -27,14 +27,6 @@ int main() {
         // Salvar o estado atual no histórico antes de carregar o novo jogo
         empilharComando(historico, 'l', L, C, carac);
 
-        // Liberar a memória da matriz atual antes de carregar um novo jogo
-        if (carac != NULL) {
-            for (int i = 0; i < L; i++) {
-                free(carac[i]);
-            }
-            free(carac);
-            carac = NULL;
-        }
 
         if (carregarJogo("jogo.txt", &L, &C, &carac)) {
             printf("Jogo carregado com sucesso.\n");

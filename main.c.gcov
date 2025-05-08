@@ -1,177 +1,221 @@
         -:    0:Source:main.c
         -:    0:Graph:programa-main.gcno
         -:    0:Data:programa-main.gcda
-        -:    0:Runs:5
+        -:    0:Runs:0
         -:    1:#include "funcoes.c"
         -:    2:#include <stdio.h>
         -:    3:#include <string.h>
         -:    4:#include <stdlib.h>
         -:    5:
-        5:    6:int main() {
-        -:    7:    // Modo normal
-        -:    8:    int L, C;
-        -:    9:    char comando[20];
-        5:   10:    char **carac = NULL; // Ponteiro duplo para a matriz
-        -:   11:
-        -:   12:    // Ler dimensões da matriz ou carregar uma matriz
-        5:   13:    printf("Digite 'l' para carregar o jogo ou insira as dimensões da matriz (L C):\n");
-        5:   14:    if (fgets(comando, sizeof(comando), stdin) == NULL) {
-    #####:   15:        printf("Erro ao ler o comando!\n");
-    #####:   16:        return 1;
-        -:   17:    }
-        -:   18:
-        5:   19:    if (comando[0] == 'l' && comando[1] == '\n') {
-        -:   20:        // Inicializa L e C para evitar uso de valores não definidos
-        2:   21:        L = 0;
-        2:   22:        C = 0;
-        -:   23:
-        -:   24:        // Salvar o estado atual no histórico antes de carregar o novo jogo
-        2:   25:        empilharComando('l', L, C, carac);
+    #####:    6:int main() {
+        -:    7:    int L, C;
+        -:    8:    char comando[20];
+    #####:    9:    char **carac = NULL; // Ponteiro duplo para a matriz
+        -:   10:    
+        -:   11:    // Inicializar o histórico
+    #####:   12:    HistoricoPilha *historico = inicializarHistorico();
+        -:   13:
+        -:   14:    // Ler dimensões da matriz ou carregar uma matriz
+    #####:   15:    printf("Digite 'l' para carregar o jogo ou insira as dimensões da matriz (L C):\n");
+    #####:   16:    if (fgets(comando, sizeof(comando), stdin) == NULL) {
+    #####:   17:        printf("Erro ao ler o comando!\n");
+    #####:   18:        liberarHistorico(historico);
+    #####:   19:        return 1;
+        -:   20:    }
+        -:   21:
+    #####:   22:    if (comando[0] == 'l' && comando[1] == '\n') {
+        -:   23:        // Inicializa L e C para evitar uso de valores não definidos
+    #####:   24:        L = 0;
+    #####:   25:        C = 0;
         -:   26:
-        -:   27:        // Liberar a memória da matriz atual antes de carregar um novo jogo
-        2:   28:        if (carac != NULL) {
-    #####:   29:            for (int i = 0; i < L; i++) {
-    #####:   30:                free(carac[i]);
-        -:   31:            }
-    #####:   32:            free(carac);
-        -:   33:        }
-        -:   34:
-        4:   35:        if (carregarJogo("jogo.txt", &L, &C, &carac)) {
-        2:   36:            printf("Jogo carregado com sucesso.\n");
-        -:   37:        } else {
-    #####:   38:            printf("Falha ao carregar o jogo.\n");
-    #####:   39:            return 1; // Sai do programa se falhar ao carregar o jogo
-        -:   40:        }
-        -:   41:    } else {
-        3:   42:        if (sscanf(comando, "%d %d", &L, &C) != 2) {
-        1:   43:            printf("Erro ao ler as dimensões da matriz!\n");
-        1:   44:            return 1;
-        -:   45:        }
-        -:   46:
-        -:   47:        // Alocar memória para a matriz
-        2:   48:        carac = (char **)malloc(L * sizeof(char *));
-        2:   49:        if (carac == NULL) {
-    #####:   50:            printf("Erro ao alocar memória para a matriz!\n");
-    #####:   51:            return 1;
-        -:   52:        }
-        6:   53:        for (int i = 0; i < L; i++) {
-        4:   54:            carac[i] = (char *)malloc((C + 1) * sizeof(char));
-        4:   55:            if (carac[i] == NULL) {
-    #####:   56:                printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
-    #####:   57:                return 1;
-        -:   58:            }
-        -:   59:        }
-        -:   60:
-        6:   61:        for (int i = 0; i < L; i++) {
-        4:   62:            if (scanf("%s", carac[i]) != 1) {
-    #####:   63:                printf("Erro ao ler a linha %d\n", i);
-    #####:   64:                return 1;
-        -:   65:            }
-        -:   66:        }
-        -:   67:
-        -:   68:        // Limpa o buffer antes de usar fgets
-        2:   69:        while (getchar() != '\n');
-        -:   70:    }
-        -:   71:
-        -:   72:    // Loop principal
-        -:   73:    while (1) {
-       37:   74:        printMatriz(L, C, carac); // Imprime a matriz atual
-        -:   75:
-       37:   76:        printf("Digite um comando:\n");
-       37:   77:        printf("- s para sair\n");
-       37:   78:        printf("- g para guardar o jogo\n");
-       37:   79:        printf("- l para carregar o jogo\n");
-       37:   80:        printf("- r <coordenada> para riscar uma posição\n");
-       37:   81:        printf("- b <coordenada> para colocar em maiúsculas uma posição\n");
-       37:   82:        printf("- d para desfazer o último comando\n");
-       37:   83:        printf("- a para ajudar mudando o estado de todas as casas que se conseguem inferir através do estado atual do tabuleiro\n");
-       37:   84:        printf("- A invocar o comando a enquanto o jogo sofrer alterações\n");
-       37:   85:        printf("- v para verificar as restrições\n");
-       37:   86:        printf("- R para resolver o jogo automaticamente\n");
-        -:   87:
-       37:   88:        if (fgets(comando, sizeof(comando), stdin) == NULL) {
-    #####:   89:            printf("Erro ao ler o comando!\n");
-    #####:   90:            return 1;
-        -:   91:        }
+        -:   27:        // Salvar o estado atual no histórico antes de carregar o novo jogo
+    #####:   28:        empilharComando(historico, 'l', L, C, carac);
+        -:   29:
+        -:   30:        // Liberar a memória da matriz atual antes de carregar um novo jogo
+    #####:   31:        if (carac != NULL) {
+    #####:   32:            for (int i = 0; i < L; i++) {
+    #####:   33:                free(carac[i]);
+        -:   34:            }
+    #####:   35:            free(carac);
+    #####:   36:            carac = NULL;
+        -:   37:        }
+        -:   38:
+    #####:   39:        if (carregarJogo("jogo.txt", &L, &C, &carac)) {
+    #####:   40:            printf("Jogo carregado com sucesso.\n");
+        -:   41:
+        -:   42:            // Salvar a matriz carregada no ficheiro res.txt
+    #####:   43:            salvarJogoSem("res.txt", L, C, carac);
+        -:   44:        } else {
+    #####:   45:            printf("Falha ao carregar o jogo.\n");
+    #####:   46:            liberarHistorico(historico);
+    #####:   47:            return 1; // Sai do programa se falhar ao carregar o jogo
+        -:   48:        }
+        -:   49:    } else {
+    #####:   50:        if (sscanf(comando, "%d %d", &L, &C) != 2) {
+    #####:   51:            printf("Erro ao ler as dimensões da matriz!\n");
+    #####:   52:            liberarHistorico(historico);
+    #####:   53:            return 1;
+        -:   54:        }
+        -:   55:
+        -:   56:        // Alocar memória para a matriz
+    #####:   57:        carac = (char **)malloc(L * sizeof(char *));
+    #####:   58:        if (carac == NULL) {
+    #####:   59:            printf("Erro ao alocar memória para a matriz!\n");
+    #####:   60:            liberarHistorico(historico);
+    #####:   61:            return 1;
+        -:   62:        }
+    #####:   63:        for (int i = 0; i < L; i++) {
+    #####:   64:            carac[i] = (char *)malloc((C + 1) * sizeof(char));
+    #####:   65:            if (carac[i] == NULL) {
+    #####:   66:                printf("Erro ao alocar memória para a linha %d da matriz!\n", i);
+        -:   67:                // Liberar memória já alocada
+    #####:   68:                for (int j = 0; j < i; j++) {
+    #####:   69:                    free(carac[j]);
+        -:   70:                }
+    #####:   71:                free(carac);
+    #####:   72:                liberarHistorico(historico);
+    #####:   73:                return 1;
+        -:   74:            }
+        -:   75:        }
+        -:   76:
+    #####:   77:        for (int i = 0; i < L; i++) {
+    #####:   78:            if (scanf("%s", carac[i]) != 1) {
+    #####:   79:                printf("Erro ao ler a linha %d\n", i);
+    #####:   80:                liberarMatriz(L, carac);
+    #####:   81:                liberarHistorico(historico);
+    #####:   82:                return 1;
+        -:   83:            }
+        -:   84:        }
+        -:   85:
+        -:   86:        // Limpa o buffer antes de usar fgets
+    #####:   87:        while (getchar() != '\n');
+        -:   88:
+        -:   89:        // Salvar a matriz introduzida no ficheiro res.txt
+    #####:   90:        salvarJogoSem( "res.txt", L, C, carac);
+        -:   91:    }
         -:   92:
-        -:   93:        // Verifica se o comando é "s" para sair
-       37:   94:        if (comando[0] == 's' && comando[1] == '\n') {
-        4:   95:            printf("Encerrar o programa.\n");
-        4:   96:            break;
-        -:   97:        }
-        -:   98:
-        -:   99:        // Verifica se o comando é 'g' para salvar o jogo
-       33:  100:        if (comando[0] == 'g' && comando[1] == '\n') {
-        1:  101:            salvarJogo("jogo.txt", L, C, carac);
-        1:  102:            continue;
-        -:  103:        }
-        -:  104:
-        -:  105:        // Verifica se o comando é 'l' para carregar o jogo
-       32:  106:        if (comando[0] == 'l' && comando[1] == '\n') {
-        -:  107:            // Salvar o estado atual no histórico antes de carregar o novo jogo
-        1:  108:            empilharComando('l', L, C, carac);
-        -:  109:
-        -:  110:            // Liberar a memória da matriz atual antes de carregar um novo jogo
-        3:  111:            for (int i = 0; i < L; i++) {
-        2:  112:                free(carac[i]);
-        -:  113:            }
-        1:  114:            free(carac);
-        -:  115:
-        1:  116:            if (carregarJogo("jogo.txt", &L, &C, &carac)) {
-        1:  117:                printf("Jogo carregado com sucesso.\n");
-        -:  118:            } else {
-    #####:  119:                printf("Falha ao carregar o jogo.\n");
-        -:  120:            }
-        1:  121:            continue;
-        -:  122:        }
-        -:  123:
-        -:  124:        // Verifica se o comando é "r <coordenada>"
-       31:  125:        if (comando[0] == 'r' && comando[1] == ' ') {
-        8:  126:            executarComandoR(L, C, carac, comando);
-        8:  127:            continue;
-        -:  128:        }
-        -:  129:
-        -:  130:        // Verifica se o comando é "b <coordenada>"
-       23:  131:        if (comando[0] == 'b' && comando[1] == ' ') {
-        4:  132:            executarComandoB(L, C, carac, comando);
-        4:  133:            continue;
-        -:  134:        }
-        -:  135:
-        -:  136:        // Verifica se o comando é "d" para desfazer o último comando
-       19:  137:        if (comando[0] == 'd' && comando[1] == '\n') {
-        3:  138:            desfazerComando(&carac, &L, &C);
-        3:  139:            continue;
-        -:  140:        }
-        -:  141:
-        -:  142:        // Verifica se o comando é "a" para ajudar
-       16:  143:        if (comando[0] == 'a' && comando[1] == '\n') {
-        4:  144:            executarComandoa(L, C, carac);
-        4:  145:            continue;
-        -:  146:        }
-        -:  147:
-        -:  148:        // Verifica se o comando é "v" para verificar as restrições
-       12:  149:        if (comando[0] == 'v' && comando[1] == '\n') {
-        4:  150:            executarComandov(L, C, carac);
-        4:  151:            continue;
-        -:  152:        }
-        -:  153:
-        -:  154:        // Verifica se o comando é "R" para resolver o jogo automaticamente
-        8:  155:        if (comando[0] == 'R' && comando[1] == '\n') {
-        3:  156:            resolverJogo(L, C, carac);
-        3:  157:            continue;
-        -:  158:        }
-        -:  159:
-        5:  160:        if (comando[0]== 'A' && comando[1] == '\n') {
-        4:  161:            executarComandoA(L, C, carac);
-        4:  162:            continue;
-        -:  163:        }
-        -:  164:    }
-        -:  165:
-        -:  166:    // Liberar a memória da matriz antes de encerrar o programa
-       21:  167:    for (int i = 0; i < L; i++) {
-       17:  168:        free(carac[i]);
-        -:  169:    }
-        4:  170:    free(carac);
-        -:  171:
-        4:  172:    return 0;
-        -:  173:}
+        -:   93:    // Loop principal
+        -:   94:    while (1) {
+    #####:   95:        printMatriz(L, C, carac); // Imprime a matriz atual
+        -:   96:
+    #####:   97:        printf("Digite um comando:\n");
+    #####:   98:        printf("- s para sair\n");
+    #####:   99:        printf("- g para guardar o jogo\n");
+    #####:  100:        printf("- l para carregar o jogo\n");
+    #####:  101:        printf("- r <coordenada> para riscar uma posição\n");
+    #####:  102:        printf("- b <coordenada> para colocar em maiúsculas uma posição\n");
+    #####:  103:        printf("- d para desfazer o último comando\n");
+    #####:  104:        printf("- a para ajudar mudando o estado de todas as casas que se conseguem inferir através do estado atual do tabuleiro\n");
+    #####:  105:        printf("- A invocar o comando a enquanto o jogo sofrer alterações\n");
+    #####:  106:        printf("- v para verificar as restrições\n");
+    #####:  107:        printf("- R para resolver o jogo automaticamente\n");
+        -:  108:
+    #####:  109:        if (fgets(comando, sizeof(comando), stdin) == NULL) {
+    #####:  110:            printf("Erro ao ler o comando!\n");
+    #####:  111:            break;
+        -:  112:        }
+        -:  113:
+        -:  114:        // Verifica se o comando é "s" para sair
+    #####:  115:        if (comando[0] == 's' && comando[1] == '\n') {
+    #####:  116:            printf("Encerrar o programa.\n");
+    #####:  117:            break;
+        -:  118:        }
+        -:  119:
+        -:  120:        // Verifica se o comando é 'g' para salvar o jogo
+    #####:  121:        if (comando[0] == 'g' && comando[1] == '\n') {
+    #####:  122:            salvarJogo(historico, "jogo.txt", L, C, carac);
+    #####:  123:            continue;
+        -:  124:        }
+        -:  125:
+        -:  126:        // Verifica se o comando é 'l' para carregar o jogo
+    #####:  127:        if (comando[0] == 'l' && comando[1] == '\n') {
+        -:  128:            // Salvar o estado atual no histórico antes de carregar o novo jogo
+    #####:  129:            empilharComando(historico, 'l', L, C, carac);
+        -:  130:
+        -:  131:            // Liberar a memória da matriz atual antes de carregar um novo jogo
+    #####:  132:            for (int i = 0; i < L; i++) {
+    #####:  133:                free(carac[i]);
+        -:  134:            }
+    #####:  135:            free(carac);
+    #####:  136:            carac = NULL;
+        -:  137:
+    #####:  138:            if (carregarJogo("jogo.txt", &L, &C, &carac)) {
+    #####:  139:                printf("Jogo carregado com sucesso.\n");
+        -:  140:
+        -:  141:                // Salvar a matriz carregada no ficheiro res.txt
+    #####:  142:                salvarJogo(historico, "res.txt", L, C, carac);
+        -:  143:            } else {
+    #####:  144:                printf("Falha ao carregar o jogo.\n");
+        -:  145:            }
+    #####:  146:            continue;
+        -:  147:        }
+        -:  148:
+        -:  149:        // Verifica se o comando é "r <coordenada>"
+    #####:  150:        if (comando[0] == 'r' && comando[1] == ' ') {
+    #####:  151:            executarComandoR(historico, L, C, carac, comando);
+    #####:  152:            continue;
+        -:  153:        }
+        -:  154:
+        -:  155:        // Verifica se o comando é "b <coordenada>"
+    #####:  156:        if (comando[0] == 'b' && comando[1] == ' ') {
+    #####:  157:            executarComandoB(historico, L, C, carac, comando);
+    #####:  158:            continue;
+        -:  159:        }
+        -:  160:
+        -:  161:        // Verifica se o comando é "d" para desfazer o último comando
+    #####:  162:        if (comando[0] == 'd' && comando[1] == '\n') {
+    #####:  163:            desfazerComando(historico, &carac, &L, &C);
+    #####:  164:            continue;
+        -:  165:        }
+        -:  166:
+        -:  167:        // Verifica se o comando é "a" para ajudar
+    #####:  168:        if (comando[0] == 'a' && comando[1] == '\n') {
+    #####:  169:            executarComandoa(historico, L, C, carac);
+    #####:  170:            continue;
+        -:  171:        }
+        -:  172:
+        -:  173:        // Verifica se o comando é "A" para ajudar continuamente
+    #####:  174:        if (comando[0] == 'A' && comando[1] == '\n') {
+    #####:  175:            executarComandoA(historico, L, C, carac);
+    #####:  176:            continue;
+        -:  177:        }
+        -:  178:
+        -:  179:        // Verifica se o comando é "v" para verificar as restrições
+    #####:  180:        if (comando[0] == 'v' && comando[1] == '\n') {
+    #####:  181:            executarComandov(L, C, carac);
+    #####:  182:            continue;
+        -:  183:        }
+        -:  184:
+        -:  185:        // Verifica se o comando é "R" para resolver o jogo automaticamente
+    #####:  186:        if (comando[0] == 'R' && comando[1] == '\n') {
+    #####:  187:            resolverJogo(historico, L, C, carac);
+        -:  188:    
+        -:  189:            // Após resolver o jogo, carregar a matriz de res.txt
+    #####:  190:            for (int i = 0; i < L; i++) {
+    #####:  191:                free(carac[i]);
+        -:  192:            }
+    #####:  193:            free(carac);
+    #####:  194:            carac = NULL;
+        -:  195:    
+    #####:  196:            if (carregarJogo("res.txt", &L, &C, &carac)) {
+    #####:  197:                printf("Matriz resolvida carregada do ficheiro 'res.txt':\n");
+        -:  198:            } else {
+    #####:  199:                printf("Erro ao carregar a matriz resolvida do ficheiro 'res.txt'.\n");
+        -:  200:            }
+    #####:  201:            continue;
+        -:  202:        }
+        -:  203:    }
+        -:  204:
+        -:  205:    // Liberar a memória da matriz antes de encerrar o programa
+    #####:  206:    if (carac != NULL) {
+    #####:  207:        for (int i = 0; i < L; i++) {
+    #####:  208:            free(carac[i]);
+        -:  209:        }
+    #####:  210:        free(carac);
+        -:  211:    }
+        -:  212:
+        -:  213:    // Liberar a memória do histórico
+    #####:  214:    liberarHistorico(historico);
+        -:  215:
+    #####:  216:    return 0;
+        -:  217:}
