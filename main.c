@@ -7,7 +7,7 @@ int main() {
     int L, C;
     char comando[20];
     char **carac = NULL; // Ponteiro duplo para a matriz
-    
+
     // Inicializar o histórico
     HistoricoPilha *historico = inicializarHistorico();
 
@@ -26,7 +26,6 @@ int main() {
 
         // Salvar o estado atual no histórico antes de carregar o novo jogo
         empilharComando(historico, 'l', L, C, carac);
-
 
         if (carregarJogo("jogo.txt", &L, &C, &carac)) {
             printf("Jogo carregado com sucesso.\n");
@@ -79,11 +78,12 @@ int main() {
         while (getchar() != '\n');
 
         // Salvar a matriz introduzida no ficheiro res.txt
-        salvarJogoSem( "res.txt", L, C, carac);
+        salvarJogoSem("res.txt", L, C, carac);
     }
 
-    // Loop principal
-    while (1) {
+    // Loop principal do programa
+    int sair = 0;
+    while (!sair) {
         printMatriz(L, C, carac); // Imprime a matriz atual
 
         printf("Digite um comando:\n");
@@ -100,24 +100,18 @@ int main() {
 
         if (fgets(comando, sizeof(comando), stdin) == NULL) {
             printf("Erro ao ler o comando!\n");
-            break;
-        }
-
-        // Verifica se o comando é "s" para sair
-        if (comando[0] == 's' && comando[1] == '\n') {
+            sair = 1;
+        } else if (comando[0] == 's' && comando[1] == '\n') {
+            // Verifica se o comando é "s" para sair
             printf("Encerrar o programa.\n");
-            break;
-        }
+            sair = 1;
 
-        // Verifica se o comando é 'g' para salvar o jogo
-        if (comando[0] == 'g' && comando[1] == '\n') {
+        } else if (comando[0] == 'g' && comando[1] == '\n') {
+            // Verifica se o comando é 'g' para salvar o jogo
             salvarJogo(historico, "jogo.txt", L, C, carac);
-            continue;
-        }
 
-        // Verifica se o comando é 'l' para carregar o jogo
-        if (comando[0] == 'l' && comando[1] == '\n') {
-            // Salvar o estado atual no histórico antes de carregar o novo jogo
+        } else if (comando[0] == 'l' && comando[1] == '\n') {
+            // Verifica se o comando é 'l' para carregar o jogo
             empilharComando(historico, 'l', L, C, carac);
 
             // Liberar a memória da matriz atual antes de carregar um novo jogo
@@ -129,68 +123,52 @@ int main() {
 
             if (carregarJogo("jogo.txt", &L, &C, &carac)) {
                 printf("Jogo carregado com sucesso.\n");
-
-                // Salvar a matriz carregada no ficheiro res.txt
                 salvarJogo(historico, "res.txt", L, C, carac);
             } else {
                 printf("Falha ao carregar o jogo.\n");
             }
-            continue;
-        }
-
-        // Verifica se o comando é "r <coordenada>"
-        if (comando[0] == 'r' && comando[1] == ' ') {
+        } else if (comando[0] == 'r' && comando[1] == ' ') {
+            // Verifica se o comando é "r <coordenada>"
             executarComandoR(historico, L, C, carac, comando);
-            continue;
-        }
 
-        // Verifica se o comando é "b <coordenada>"
-        if (comando[0] == 'b' && comando[1] == ' ') {
+        } else if (comando[0] == 'b' && comando[1] == ' ') {
+            // Verifica se o comando é "b <coordenada>"
             executarComandoB(historico, L, C, carac, comando);
-            continue;
-        }
 
-        // Verifica se o comando é "d" para desfazer o último comando
-        if (comando[0] == 'd' && comando[1] == '\n') {
+        } else if (comando[0] == 'd' && comando[1] == '\n') {
+            // Verifica se o comando é "d" para desfazer o último comando
             desfazerComando(historico, &carac, &L, &C);
-            continue;
-        }
 
-        // Verifica se o comando é "a" para ajudar
-        if (comando[0] == 'a' && comando[1] == '\n') {
+        } else if (comando[0] == 'a' && comando[1] == '\n') {
+            // Verifica se o comando é "a" para ajudar
             executarComandoa(historico, L, C, carac);
-            continue;
-        }
 
-        // Verifica se o comando é "A" para ajudar continuamente
-        if (comando[0] == 'A' && comando[1] == '\n') {
+        } else if (comando[0] == 'A' && comando[1] == '\n') {
+            // Verifica se o comando é "A" para ajudar continuamente
             executarComandoA(historico, L, C, carac);
-            continue;
-        }
 
-        // Verifica se o comando é "v" para verificar as restrições
-        if (comando[0] == 'v' && comando[1] == '\n') {
+        } else if (comando[0] == 'v' && comando[1] == '\n') {
+            // Verifica se o comando é "v" para verificar as restrições
             executarComandov(L, C, carac);
-            continue;
-        }
-
-        // Verifica se o comando é "R" para resolver o jogo automaticamente
-        if (comando[0] == 'R' && comando[1] == '\n') {
+            
+        } else if (comando[0] == 'R' && comando[1] == '\n') {
+            // Verifica se o comando é "R" para resolver o jogo automaticamente
             resolverJogo(historico, L, C, carac);
-    
+
             // Após resolver o jogo, carregar a matriz de res.txt
             for (int i = 0; i < L; i++) {
                 free(carac[i]);
             }
             free(carac);
             carac = NULL;
-    
+
             if (carregarJogo("res.txt", &L, &C, &carac)) {
                 printf("Matriz resolvida carregada do ficheiro 'res.txt':\n");
             } else {
                 printf("Erro ao carregar a matriz resolvida do ficheiro 'res.txt'.\n");
             }
-            continue;
+        } else {
+            printf("Comando inválido!\n");
         }
     }
 

@@ -27,7 +27,6 @@ void liberarMatriz(int L, char **matriz) {
     free(matriz);
 }
 
-
 // Inicializar a pilha do histórico
 HistoricoPilha* inicializarHistorico() {
     HistoricoPilha *hp = malloc(sizeof(HistoricoPilha));
@@ -74,7 +73,6 @@ char **copiarMatriz(int L, int C, char **carac) {
     }
     return copia;
 }
-
 
 void empilharComando(HistoricoPilha *hp, char tipoComando, int L, int C, char **carac) {
     hp->topo++;
