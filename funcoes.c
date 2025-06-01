@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <ctype.h> // Para usar a função toupper
 #include <string.h> // Para usar a função strcmp
-#include <stdlib.h>
+#include <stdlib.h> // Para usar a função malloc
 
 // Estrutura para armazenar o histórico de comandos
 typedef struct {
