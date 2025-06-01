@@ -623,23 +623,24 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
             for (int j = 0; j < C; j++) {
                 if (islower(original[i][j])) {
                     char simbolo = original[i][j];
-                    int unico = 1;
+                    int unicoLinha = 1;
+                    int unicoColuna = 1;
 
                     // Verificar se o símbolo é único na linha
                     for (int k = 0; k < C; k++) {
                         if (k != j && original[i][k] == simbolo) {
-                            unico = 0;
-                            break;
+                            unicoLinha = 0;
                         }
                     }
 
                     // Verificar se o símbolo é único na coluna
                     for (int k = 0; k < L; k++) {
                         if (k != i && original[k][j] == simbolo) {
-                            unico = 0;
-                            break;
+                            unicoColuna = 0;
                         }
                     }
+
+                    int unico = unicoLinha && unicoColuna;
 
                     // Se for único, pintar de branco
                     if (unico) {
@@ -677,14 +678,16 @@ void resolverJogo(HistoricoPilha *hp, int L, int C, char **carac) {
         }
 
         // Verificar se ainda há mudanças possíveis
+        int encontrou_ponto = 0;
         for (int i = 0; i < L; i++) {
             for (int j = 0; j < C; j++) {
                 if (original[i][j] == '.') {
-                    mudou = 1;
-                    break;
+                    encontrou_ponto = 1;
                 }
             }
-            if (mudou) break;
+        }
+        if (encontrou_ponto) {
+            mudou = 1;
         }
     }
 
