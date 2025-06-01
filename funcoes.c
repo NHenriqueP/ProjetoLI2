@@ -411,12 +411,13 @@ void executarComandoAsem(int L, int C, char **carac) {
         executarComandoasem(L, C, carac);
 
         // Verificar se houve mudanças no tabuleiro
+        int houveMudanca = 0;
         for (int i = 0; i < L; i++) {
             if (strcmp(estadoAnterior[i], carac[i]) != 0) {
-                mudou = 1; // Detectamos mudanças
-                break;
+                houveMudanca = 1;
             }
         }
+        if (houveMudanca) mudou = 1;
 
         // Liberar a memória da cópia do estado anterior
         liberarMatriz(L, estadoAnterior);
