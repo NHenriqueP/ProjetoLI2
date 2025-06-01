@@ -19,25 +19,34 @@ int main() {
         return 1;
     }
 
-    if (comando[0] == 'l' && comando[1] == '\n') {
+    if (comando[0] == 'l' && comando[1] == ' ') {
+        // Verifica se o comando é "l <nomeArquivo>"
+        char nomeArquivo[50];
+        if (sscanf(comando + 2, "%s", nomeArquivo) != 1) {
+            printf("Erro: Nome do arquivo não fornecido!\n");
+            liberarHistorico(historico);
+            return 1;
+        }
+    
         // Inicializa L e C para evitar uso de valores não definidos
         L = 0;
         C = 0;
-
+    
         // Salvar o estado atual no histórico antes de carregar o novo jogo
         empilharComando(historico, 'l', L, C, carac);
-
-        if (carregarJogo("jogo.txt", &L, &C, &carac)) {
-            printf("Jogo carregado com sucesso.\n");
-
+    
+        if (carregarJogo(nomeArquivo, &L, &C, &carac)) {
+            printf("Jogo carregado com sucesso do arquivo '%s'.\n", nomeArquivo);
+    
             // Salvar a matriz carregada no ficheiro res.txt
             salvarJogoSem("res.txt", L, C, carac);
         } else {
-            printf("Falha ao carregar o jogo.\n");
+            printf("Falha ao carregar o jogo do arquivo '%s'.\n", nomeArquivo);
             liberarHistorico(historico);
             return 1; // Sai do programa se falhar ao carregar o jogo
         }
-    } else {
+    }
+    else {
         if (sscanf(comando, "%d %d", &L, &C) != 2) {
             printf("Erro ao ler as dimensões da matriz!\n");
             liberarHistorico(historico);
@@ -106,26 +115,36 @@ int main() {
             printf("Encerrar o programa.\n");
             sair = 1;
 
-        } else if (comando[0] == 'g' && comando[1] == '\n') {
-            // Verifica se o comando é 'g' para salvar o jogo
-            salvarJogo(historico, "jogo.txt", L, C, carac);
-
-        } else if (comando[0] == 'l' && comando[1] == '\n') {
-            // Verifica se o comando é 'l' para carregar o jogo
-            empilharComando(historico, 'l', L, C, carac);
-
-            // Liberar a memória da matriz atual antes de carregar um novo jogo
-            for (int i = 0; i < L; i++) {
-                free(carac[i]);
-            }
-            free(carac);
-            carac = NULL;
-
-            if (carregarJogo("jogo.txt", &L, &C, &carac)) {
-                printf("Jogo carregado com sucesso.\n");
-                salvarJogo(historico, "res.txt", L, C, carac);
+        } else if (comando[0] == 'g' && comando[1] == ' ') {
+            // Verifica se o comando é "g <nomeArquivo>"
+            char nomeArquivo[50];
+            if (sscanf(comando + 2, "%s", nomeArquivo) != 1) {
+                printf("Erro: Nome do arquivo não fornecido!\n");
             } else {
-                printf("Falha ao carregar o jogo.\n");
+                salvarJogo(historico, nomeArquivo, L, C, carac);
+            }
+
+        } else if (comando[0] == 'l' && comando[1] == ' ') {
+            // Verifica se o comando é "l <nomeArquivo>"
+            char nomeArquivo[50];
+            if (sscanf(comando + 2, "%s", nomeArquivo) != 1) {
+                printf("Erro: Nome do arquivo não fornecido!\n");
+            } else {
+                empilharComando(historico, 'l', L, C, carac);
+
+                // Liberar a memória da matriz atual antes de carregar um novo jogo
+                for (int i = 0; i < L; i++) {
+                    free(carac[i]);
+                }
+                free(carac);
+                carac = NULL;
+
+                if (carregarJogo(nomeArquivo, &L, &C, &carac)) {
+                    printf("Jogo carregado com sucesso do arquivo '%s'.\n", nomeArquivo);
+                    salvarJogoSem("res.txt", L, C, carac);
+                } else {
+                    printf("Falha ao carregar o jogo do arquivo '%s'.\n", nomeArquivo);
+                }
             }
         } else if (comando[0] == 'r' && comando[1] == ' ') {
             // Verifica se o comando é "r <coordenada>"

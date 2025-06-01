@@ -1,22 +1,30 @@
-jogo:
-	gcc main.c -o jogo -Wall -Wextra -pedantic -O1 -fsanitize=address -fno-omit-frame-pointer -g
+CC = gcc
+CFLAGS = -Wall -Wextra -pedantic -g
+COVFLAGS = -fprofile-arcs -ftest-coverage
 
-clean: 
-	rm jogo
-	rm res.txt
-	
+# Alvo principal: jogo com ASAN (sem cobertura)
+jogo:
+	$(CC) main.c -o jogo $(CFLAGS) -O1 -fsanitize=address -fno-omit-frame-pointer
+
+# Alvo para compilar testes
 testar:
-	gcc testes.c -o testes -lcunit -Wall -Wextra -pedantic -g
+	$(CC) testes.c -o testes -lcunit $(CFLAGS)
 	./testes
 
+# Limpeza
+clean:
+	rm -f jogo testes programa *.o *.gcda *.gcno *.gcov res.txt
+
+# Recompilar tudo e correr o jogo
 tudo:
 	make clean
 	make jogo
 	./jogo
 
 
-#gcov programa-main
-#open main.c.gcov - ve as linhas nao executadas
+cobertura-testes:
+	$(CC) -c testes.c $(CFLAGS) $(COVFLAGS)
+	$(CC) testes.o  -o testes -lcunit $(CFLAGS) $(COVFLAGS)
+	./testes
+	gcov testes.c
 
-cobertura:
-	gcc -fprofile-arcs -ftest-coverage -o programa main.c
